@@ -1,9 +1,9 @@
-USE test;
-CREATE TABLE Patients 
-    ( PatientID INT PRIMARY KEY AUTO_INCREMENT, 
+CREATE DATABASE IF NOT EXISTS MedManageDB;
+USE MedManageDB;
+CREATE TABLE Patients ( 
+    PatientID INT PRIMARY KEY AUTO_INCREMENT, 
     FirstName VARCHAR(50) NOT NULL, 
     LastName VARCHAR(50) NOT NULL, 
     DateOfBirth DATE NOT NULL 
     );
 
-    
