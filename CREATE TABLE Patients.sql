@@ -1,9 +1,17 @@
 CREATE DATABASE IF NOT EXISTS MedManageDB;
 USE MedManageDB;
-CREATE TABLE Patients ( 
-    PatientID INT PRIMARY KEY AUTO_INCREMENT, 
-    FirstName VARCHAR(50) NOT NULL, 
-    LastName VARCHAR(50) NOT NULL, 
-    DateOfBirth DATE NOT NULL 
-    );
 
+INSERT INTO appointment (
+    AppointmentID,
+    PatientUserID,
+    DoctorUserID,
+    AppointmentOn,
+    Details
+  )
+VALUES (
+    AppointmentID:int,
+    PatientUserID:int,
+    DoctorUserID:int,
+    'AppointmentOn:date',
+    'Details:varchar'
+  );
