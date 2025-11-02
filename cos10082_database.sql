@@ -146,11 +146,12 @@ CREATE TABLE `user` (
   `Email` varchar(255) NOT NULL,
   `PhoneNumber` varchar(20) NOT NULL,
   `Password` char(255) NOT NULL,
-  `UserType` enum('superadmin','admin','doctor','patient') NOT NULL
+  `UserType` enum('superadmin','admin','doctor','patient') NOT NULL,
+  `InstituteID` int(11) NULL,
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Indexes for dumped tables
+-- Indexes for dumped tables  
 --
 
 --
