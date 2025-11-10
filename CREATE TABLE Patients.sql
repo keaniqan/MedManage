@@ -67,4 +67,3 @@ VALUES (
 (48, 'Alexi Le Barr', 'alebarr11@youtube.com', '0112345715', 'hashed_alexi', 'patient', 101),
 (49, 'Lenee Jirus', 'ljirus12@bandcamp.com', '0112345716', 'hashed_lenee', 'patient', 101);
 (50, 'Tomas Eldridge', 'teldridge13@healthline.com', '0112345717', 'hashed_tomas', 'patient', 101);
-

@@ -235,11 +235,12 @@ CREATE TABLE `users` (
   `UserType` enum('superadmin','admin','doctor','patient') NOT NULL,
   `FirstName` varchar(100) NOT NULL,
   `LastName` varchar(100) NOT NULL,
-  `Phone` varchar(25) NOT NULL,
+  `Phone` varchar(259) NOT NULL,
   `PasswordHash` varchar(255) NOT NULL,
   `Identification` varchar(20) NOT NULL,
   `Gender` enum('M','F') NOT NULL,
   `InstituteID` smallint(5) UNSIGNED DEFAULT NULL
+  PRIMARY KEY (`UserID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores all users using the system';
 
 --
