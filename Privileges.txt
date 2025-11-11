@@ -36,5 +36,5 @@ Doctor -      1. Cannot Insert/View/Delete other doctor users
               3. Cannot view other patient's medical records who are not assigned to them
 
 
-Patient -     1. Cannot Insert/View/Delete any other users
+Patient -     1. Cannot Insert/View/Delete any other users except themselves
               2. Cannot Insert/Update/Delete prescriptions, medication, appointment
