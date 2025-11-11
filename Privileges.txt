@@ -33,7 +33,7 @@ Admin -       1. Cannot View/Update/Delete the patient's medical history
 
 Doctor -      1. Cannot Insert/View/Delete other doctor users
               2. Cannot Update other user profiles except their own doctor profile
-              3. Cannot view other patient's medical records who are not assigned to them
+              3. Cannot View/Edit/Delete other patient's medical records who are not assigned to them
 
 
 Patient -     1. Cannot Insert/View/Delete any other users except themselves
