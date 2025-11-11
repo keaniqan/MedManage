@@ -23,7 +23,7 @@ Patient -     1. View their own medication schedules
               5. View appointment schedule
               6. Request for an appointment if a side effect has been identified
               7. Can also create/edit their own reminders (not created by doctor)
-              8. Can update information regarding when they take the medicine (for compliance)
+              8. Can update when they take the medicine (for compliance)
 
 Things they "cannot" do
 
