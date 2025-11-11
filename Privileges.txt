@@ -8,7 +8,7 @@ Admin -       1. Insert/Delete/View doctor and patient users
               2. View/Update the user table
 
 Doctor -      1. Insert/View/Delete their assigned patient users
-              2. Insert/View/Update/Delete their assigned patient's medical records:
+              2. Insert/View/Update/Delete their assigned patient's details:
                 a. Add/Update/Delete medicines to patient's schedules
                 b. Add/View/Update/Delete prescription to patient's schedules
                 c. View available medicine
@@ -27,13 +27,12 @@ Patient -     1. View their own medication schedules
 
 Things they "cannot" do
 
-Admin -       1. Cannot View/Update/Delete the patient's medical history
+Admin -       1. Cannot View/Update/Delete the patient's details
               2. Cannot Insert/Update/Delete other admin users
 
 Doctor -      1. Cannot Insert/View/Delete other doctor users
               2. Cannot Update other user profiles except their own doctor profile
               3. Cannot View/Edit/Delete other patient's medical records who are not assigned to them
-
 
 Patient -     1. Cannot Insert/View/Delete any other users except themselves
               2. Cannot Insert/Update/Delete prescriptions, medication, appointment
