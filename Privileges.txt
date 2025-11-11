@@ -29,7 +29,7 @@ Patient -     1. View their own medication schedules
 Things they "cannot" do
 
 Admin -       1. Cannot View/Update/Delete the patient's medical history
-              2. Cannot Create/Edit/Delete other admin users
+              2. Cannot Create/Update/Delete other admin users
 
 Doctor -      1. Cannot Insert/View/Delete other doctor users
               2. Cannot Update other user profiles except their own doctor profile
