@@ -6,7 +6,6 @@ Superadmin -  1. Insert/Update/View/Delete admin, doctor and patient users
 
 Admin -       1. Insert/Delete/View doctor and patient users
               2. View/Update the user table
-              3. Assign Patients to Doctors
 
 Doctor -      1. Insert/View/Delete their assigned patient users
               2. Insert/View/Update/Delete their assigne patient's medical records:
