@@ -12,7 +12,7 @@ Doctor -      1. Insert/View/Delete their assigned patient users
                 a. Add/Update/Delete medicines to patient's prescriptions
                 b. View available medicine
                 c. Insert/View/Update/Delete reminders for patients according to their prescriptions (can even edit patient's reminders)
-                e. Add symptoms/disease patient is suffering from
+                d. Add symptoms/disease patient is suffering from
               3. Insert/View/Update/Delete appointments
 
 Patient -     1. View their own medication schedules
