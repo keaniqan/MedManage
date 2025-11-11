@@ -12,20 +12,19 @@ Doctor -      1. Insert/View/Delete patient users
                 a. Add/Update/Delete medicines to patient's schedules
                 b. Add/View/Update/Delete prescription to patient's schedules
                 c. View available medicine
-                d. Insert/View/Update/Delete schedules for patients
-                e. Insert/View/Update/Delete reminders for patients according to their schedules
+                d. Insert/View/Update/Delete reminders for patients according to their schedules (can even edit patient's reminders)
               3. Insert/View/Update/Delete appointments
 
-Patient -     1. View their own medication schedules/reminder
+Patient -     1. View their own medication schedules
               2. View their own medical records
               3. Add side effect
               4. View/Update their own profile
               5. View appointment schedule
               6. Request for an appointment if a side effect has been identified
+              7. Can also create/edit their own reminders (not created by doctor)
+              8. Can update information regarding when they take the medicine (for compliance)
 
 Things they "cannot" do
-
-Superadmin -  
 
 Admin -       1. Cannot View/Update/Delete the patient's medical history
               2. Cannot create other admin users
@@ -35,4 +34,4 @@ Doctor -      1. Cannot Insert/View/Delete other doctor users
 
 
 Patient -     1. Cannot Insert/View/Delete any other users
-              2. Cannot Update
+              2. Cannot Insert/Update/Delete prescriptions, medication, appointment
