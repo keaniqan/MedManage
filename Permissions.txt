@@ -1,0 +1,37 @@
+Things they "can" do:
+
+Superadmin -  1. Create/Edit/View/Delete admin, doctor and patient users
+              3. View Audit log
+              4. View medical history
+
+Admin -       1. Create/Delete/Search doctor and patient users
+              2. View/Edit the user table
+
+Doctor -      1. Create/Search/Delete patient users
+              2. Create/Search/Edit/Delete patient's medical records:
+                a. Add/Edit/Delete medicines to patient's schedules
+                b. Add/View/Search/Edit/Delete prescription to patient's schedules
+                c. View/Search available medicine
+                d. Create/View/Search/Edit/Delete schedules for patients
+                e. Create/View/Search/Edit/Delete reminders for patients according to their schedules
+              3. Create/View/Search/Edit/Delete appointments
+
+Patient -     1. View their own medication schedules/reminder
+              2. View their own medical records
+              3. Add side effect
+              4. View/Edit their own profile
+              5. View appointment schedule
+              6. Request for an appointment if a side effect has been identified
+
+Things they "cannot" do
+
+Superadmin -  
+
+Admin -       1. Cannot View/Edit/Delete/Search the patient's medical history
+              2. Cannot create other admin users
+
+Doctor -      1. Cannot Create/Search/Delete other doctor users
+              2. Cannot edit other user profiles except their own doctor profile
+
+
+Patient -     1. Cannot Create/Search/Delete other doctor users
