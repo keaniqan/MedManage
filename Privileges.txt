@@ -8,12 +8,12 @@ Admin -       1. Insert/Delete/View doctor and patient users
               2. View/Update the user table
 
 Doctor -      1. Insert/View/Delete their assigned patient users
-              2. Insert/View/Update/Delete their assigne patient's medical records:
+              2. Insert/View/Update/Delete their assigned patient's medical records:
                 a. Add/Update/Delete medicines to patient's schedules
                 b. Add/View/Update/Delete prescription to patient's schedules
                 c. View available medicine
                 d. Insert/View/Update/Delete reminders for patients according to their schedules (can even edit patient's reminders)
-                e. Add symptoms
+                e. Add symptoms/disease patient is suffering from
               3. Insert/View/Update/Delete appointments
 
 Patient -     1. View their own medication schedules
