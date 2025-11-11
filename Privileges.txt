@@ -15,7 +15,7 @@ Doctor -      1. Insert/View/Delete their assigned patient users
                 d. Add symptoms/disease patient is suffering from
               3. Insert/View/Update/Delete appointments
 
-Patient -     1. View their own medication schedules
+Patient -     1. View their own prescriptions
               2. View their own medical records
               3. Add side effect
               4. View/Update their own profile
