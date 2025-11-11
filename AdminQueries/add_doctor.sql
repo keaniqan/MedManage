@@ -26,12 +26,6 @@ VALUES (
 );
 
 CREATE USER 'doc1'@'localhost' IDENTIFIED BY 'doc1';
-
-CREATE VIEW patient_view AS
-SELECT UserID, Username, Email, FirstName, LastName, Phone, Gender, InstituteID
-FROM users
-WHERE UserType = 'patient';
-
-GRANT SELECT ON medmanagedb.patient_view TO 'doc1'@'localhost';
+GRANT SELECT, INSERT, UPDATE ON medmanagedb.users TO 'doc1'@'localhost';
 FLUSH PRIVILEGES;
 
