@@ -7,7 +7,8 @@
 -- Generation Time: Nov 06, 2025 at 05:53 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
-
+CREATE DATABASE IF NOT EXISTS `medmanagedb` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `medmanagedb`;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -240,7 +241,7 @@ CREATE TABLE `users` (
   `PasswordHash` varchar(255) NOT NULL,
   `Identification` varchar(20) NOT NULL,
   `Gender` enum('M','F') NOT NULL,
-  `InstituteID` smallint(5) UNSIGNED DEFAULT NULL
+  `InstituteID` smallint(5) UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`UserID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores all users using the system';
 
@@ -342,8 +343,7 @@ ALTER TABLE `symptom`
 --
 -- Indexes for table `users`
 --
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`UserID`),
+ALTER TABLE `users` 
   ADD KEY `InstituteID` (`InstituteID`);
 
 --

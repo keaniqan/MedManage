@@ -1,4 +1,3 @@
-DELIMITER //
 DROP PROCEDURE IF EXISTS AddDoctor;
 CREATE PROCEDURE AddDoctor(
     IN p_UserID INT,
@@ -13,8 +12,7 @@ CREATE PROCEDURE AddDoctor(
     IN p_InstituteID SMALLINT
 )
 BEGIN
-    -- Insert into app table
-    INSERT INTO user (
+    INSERT INTO users (
         UserID, Username, Email, UserType,
         FirstName, LastName, Phone, PasswordHash,
         Identification, Gender, InstituteID
@@ -25,18 +23,27 @@ BEGIN
         p_Identification, p_Gender, p_InstituteID
     );
 
-    -- Build dynamic SQL for CREATE USER and GRANT
-    SET @create_sql = CONCAT('CREATE USER IF NOT EXISTS \'', REPLACE(p_Username, '''', '\\'''), '\'@\'localhost\' IDENTIFIED BY \'', REPLACE(p_Password, '''', '\\'''), '\';');
+    -- Create MySQL account (requires proper privileges; remove if not needed)
+    SET @create_sql = CONCAT(
+        'CREATE USER IF NOT EXISTS `',
+        REPLACE(p_Username,'`','``'),
+        '`@`localhost` IDENTIFIED BY ', QUOTE(p_Password), ';'
+    );
     PREPARE stmt1 FROM @create_sql;
     EXECUTE stmt1;
     DEALLOCATE PREPARE stmt1;
 
-    SET @grant_sql = CONCAT('GRANT SELECT, INSERT, UPDATE ON medmanagedb.user TO \'', REPLACE(p_Username, '''', '\\'''), '\'@\'localhost\';');
+    SET @grant_sql = CONCAT(
+        'GRANT SELECT, INSERT, UPDATE ON `medmanagedb`.`users` TO `',
+        REPLACE(p_Username,'`','``'),
+        '`@`localhost`;'
+    );
     PREPARE stmt2 FROM @grant_sql;
     EXECUTE stmt2;
     DEALLOCATE PREPARE stmt2;
 
     FLUSH PRIVILEGES;
-END //
+END;
 
-DELIMITER ;
+CALL AddDoctor(1,'doc1','dr.jones@example.com','Sarah','Jones','0123456789','doc1','IC1234567','F',1);
+CALL AddDoctor(2,'doc2','dr.smith@example.com','John','Smith','0987654321','doc2','IC7654321','M',1);
