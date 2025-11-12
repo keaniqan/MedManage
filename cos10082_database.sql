@@ -353,6 +353,12 @@ ALTER TABLE `users`
 --
 -- AUTO_INCREMENT for table `appointment`
 --
+ALTER TABLE `users`
+  MODIFY `UserID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `appointment`
+--
 ALTER TABLE `appointment`
   MODIFY `AppointmentID` int(11) NOT NULL AUTO_INCREMENT;
 
