@@ -1,8 +1,6 @@
 import mysql.connector
 from mysql.connector import Error
 import hashlib
-import csv
-import json
 import random
 from faker import Faker
 
@@ -10,7 +8,7 @@ from faker import Faker
 # UserInserter Class
 # =========================
 class UserInserter:
-    def __init__(self, host='localhost', port=3307, database='MedManageDB', user='root', password=''):
+    def __init__(self, host='localhost', port=3307, database='medmanagedb', user='root', password='root'):
         """Initialize database connection"""
         self.host = host
         self.port = port
@@ -41,7 +39,7 @@ class UserInserter:
         return hashlib.sha256(password.encode()).hexdigest()
 
     # -------------------------
-    # Single and Bulk Inserts
+    # Single User Insert
     # -------------------------
     def insert_single_user(self, username, email, user_type, first_name, last_name,
                           phone, password, identification, gender, institute_id=None):
@@ -61,67 +59,274 @@ class UserInserter:
                       phone, password_hash, identification, gender, institute_id)
             cursor.execute(query, values)
             self.connection.commit()
+            user_id = cursor.lastrowid
             cursor.close()
-            return cursor.lastrowid
+            print(f"✓ Created User: {first_name} {last_name} ({user_type})")
+            return user_id
         except Error as e:
             print(f"✗ Error inserting user '{username}': {e}")
             return False
 
-    def insert_bulk_users(self, users_list):
-        """Insert multiple users from a list of dictionaries"""
-        success_count = 0
-        fail_count = 0
-        for user in users_list:
-            result = self.insert_single_user(
-                username=user.get('username'),
-                email=user.get('email'),
-                user_type=user.get('user_type', 'patient'),
-                first_name=user.get('first_name'),
-                last_name=user.get('last_name'),
-                phone=user.get('phone'),
-                password=user.get('password', 'default123'),
-                identification=user.get('identification'),
-                gender=user.get('gender'),
-                institute_id=user.get('institute_id')
+    # -------------------------
+    # Insert Patient Details
+    # -------------------------
+    def insert_patient_details(self, user_id, abo_blood_type, rh_blood_type, emergency_contact, dob):
+        """Insert patient details"""
+        if not self.connection or not self.connection.is_connected():
+            print("No database connection")
+            return False
+        try:
+            cursor = self.connection.cursor()
+            query = """
+            INSERT INTO patientdetails (UserID, ABOBloodType, RhBloodType, EmergencyContact, DOB)
+            VALUES (%s, %s, %s, %s, %s)
+            """
+            values = (user_id, abo_blood_type, rh_blood_type, emergency_contact, dob)
+            cursor.execute(query, values)
+            self.connection.commit()
+            patient_details_id = cursor.lastrowid
+            cursor.close()
+            return patient_details_id
+        except Error as e:
+            print(f"✗ Error inserting patient details: {e}")
+            return False
+
+    # -------------------------
+    # Insert Doctor Details
+    # -------------------------
+    def insert_doctor_details(self, user_id, title, medical_licence_number, 
+                             years_of_experience, medical_school, certificates, languages_spoken):
+        """Insert doctor details"""
+        if not self.connection or not self.connection.is_connected():
+            print("No database connection")
+            return False
+        try:
+            cursor = self.connection.cursor()
+            query = """
+            INSERT INTO doctordetails (UserID, Title, MedicalLicenceNumber, YearsOfExperience,
+                                       MedicalSchool, Certificates, LanguagesSpoken)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            values = (user_id, title, medical_licence_number, years_of_experience,
+                     medical_school, certificates, languages_spoken)
+            cursor.execute(query, values)
+            self.connection.commit()
+            doctor_details_id = cursor.lastrowid
+            cursor.close()
+            return doctor_details_id
+        except Error as e:
+            print(f"✗ Error inserting doctor details: {e}")
+            return False
+
+    # -------------------------
+    # Link Doctor to Patient
+    # -------------------------
+    def link_doctor_patient(self, patient_details_id, doctor_details_id, is_primary=False):
+        """Link a doctor to a patient"""
+        if not self.connection or not self.connection.is_connected():
+            print("No database connection")
+            return False
+        try:
+            cursor = self.connection.cursor()
+            query = """
+            INSERT INTO doctor_patient (PatientDetailsID, DoctorDetailsID, IsPrimaryDoctor)
+            VALUES (%s, %s, %s)
+            """
+            values = (patient_details_id, doctor_details_id, is_primary)
+            cursor.execute(query, values)
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Error as e:
+            print(f"✗ Error linking doctor to patient: {e}")
+            return False
+
+    # -------------------------
+    # Initialize Institutes
+    # -------------------------
+    def initialize_institutes(self):
+        """Insert 5 hardcoded institutes into the database"""
+        if not self.connection or not self.connection.is_connected():
+            print("No database connection")
+            return False
+        
+        institutes = [
+            ('Sarawak General Hospital', 'Jalan Hospital', None, 'Kuching', 'SWK', 'MY', '93586'),
+            ('Normah Medical Specialist Centre', 'Jalan Tun Abdul Rahman Yakub', None, 'Kuching', 'SWK', 'MY', '93350'),
+            ('Timberland Medical Centre', 'Jalan Rock', 'Taman Rock', 'Kuching', 'SWK', 'MY', '93200'),
+            ('Borneo Medical Centre', 'Jalan Tun Jugah', None, 'Kuching', 'SWK', 'MY', '93350'),
+            ('KPJ Healthcare Kuching', 'Lot 1230 & 1231 Section 66 KTLD', 'Jalan Tun Ahmad Zaidi Adruce', 'Kuching', 'SWK', 'MY', '93200')
+        ]
+        
+        try:
+            cursor = self.connection.cursor()
+            
+            # Check if institutes already exist
+            cursor.execute("SELECT COUNT(*) FROM institute")
+            count = cursor.fetchone()[0]
+            
+            if count >= 5:
+                print("✓ Institutes already exist in database")
+                cursor.close()
+                return True
+            
+            # Clear existing institutes and insert new ones
+            cursor.execute("DELETE FROM institute")
+            
+            query = """
+            INSERT INTO institute (Name, AddressLine1, AddressLine2, City, StateProvinceCode, Country, PostalCode)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            
+            for institute in institutes:
+                cursor.execute(query, institute)
+            
+            self.connection.commit()
+            cursor.close()
+            print(f"✓ Successfully inserted {len(institutes)} institutes")
+            return True
+            
+        except Error as e:
+            print(f"✗ Error initializing institutes: {e}")
+            return False
+
+    # -------------------------
+    # Bulk Insert with Relations
+    # -------------------------
+    def insert_doctors_with_patients(self, num_doctors, patients_per_doctor=10):
+        """Insert doctors and assign patients to them (distributed across institutes)"""
+        fake = Faker()
+        
+        print(f"\n--- Generating {num_doctors} Doctors with {patients_per_doctor} Patients Each ---")
+        
+        titles = ['Dr.', 'Prof. Dr.', 'Assoc. Prof. Dr.']
+        medical_schools = [
+            'University of Malaya', 'National University of Singapore',
+            'Monash University', 'University of Melbourne',
+            'King\'s College London', 'Johns Hopkins University'
+        ]
+        certificates = [
+            'MBBS, MRCP', 'MBBS, FRCS', 'MD, FACP',
+            'MBBS, MMed', 'MD, PhD', 'MBBS, FRCPE'
+        ]
+        languages = ['English, Malay', 'English, Mandarin', 'English, Tamil', 'English, Malay, Mandarin']
+        
+        # Get list of institute IDs
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT InstituteID FROM institute")
+        institute_ids = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        
+        if not institute_ids:
+            print("✗ No institutes found in database!")
+            return
+        
+        success_doctors = 0
+        success_patients = 0
+        
+        for i in range(num_doctors):
+            # Distribute doctors across institutes
+            institute_id = institute_ids[i % len(institute_ids)]
+            
+            # Create doctor user
+            first_name = fake.first_name()
+            last_name = fake.last_name()
+            username = f"dr_{first_name.lower()}_{last_name.lower()}{random.randint(1,999)}"
+            email = f"{username}@hospital.com"
+            phone = f"+60{random.choice(['11','12','13'])}{random.randint(1000000,9999999)}"
+            identification = f"IC{random.randint(700000,999999)}"
+            gender = random.choice(['M','F'])
+            
+            doctor_user_id = self.insert_single_user(
+                username=username,
+                email=email,
+                user_type='doctor',
+                first_name=first_name,
+                last_name=last_name,
+                phone=phone,
+                password='doctor123',
+                identification=identification,
+                gender=gender,
+                institute_id=institute_id
             )
-            if result:
-                success_count += 1
-            else:
-                fail_count += 1
-        print(f"\n=== Bulk Insert Summary ===")
-        print(f"Successful: {success_count}")
-        print(f"Failed: {fail_count}")
-        print(f"Total: {len(users_list)}")
-
-    # -------------------------
-    # CSV / JSON Inserts
-    # -------------------------
-    def insert_from_csv(self, csv_file_path):
-        """Insert users from a CSV file"""
-        users_list = []
-        try:
-            with open(csv_file_path, 'r', encoding='utf-8') as file:
-                csv_reader = csv.DictReader(file)
-                for row in csv_reader:
-                    users_list.append(row)
-            print(f"Loaded {len(users_list)} users from CSV")
-            self.insert_bulk_users(users_list)
-        except FileNotFoundError:
-            print(f"Error: File '{csv_file_path}' not found")
-        except Exception as e:
-            print(f"Error reading CSV: {e}")
-
-    def insert_from_json(self, json_file_path):
-        """Insert users from a JSON file"""
-        try:
-            with open(json_file_path, 'r', encoding='utf-8') as file:
-                users_list = json.load(file)
-            print(f"Loaded {len(users_list)} users from JSON")
-            self.insert_bulk_users(users_list)
-        except FileNotFoundError:
-            print(f"Error: File '{json_file_path}' not found")
-        except Exception as e:
-            print(f"Error reading JSON: {e}")
+            
+            if not doctor_user_id:
+                continue
+            
+            # Create doctor details
+            title = random.choice(titles)
+            medical_licence = f"MMC{random.randint(10000,99999)}"
+            years_exp = random.randint(5, 30)
+            school = random.choice(medical_schools)
+            cert = random.choice(certificates)
+            langs = random.choice(languages)
+            
+            doctor_details_id = self.insert_doctor_details(
+                user_id=doctor_user_id,
+                title=title,
+                medical_licence_number=medical_licence,
+                years_of_experience=years_exp,
+                medical_school=school,
+                certificates=cert,
+                languages_spoken=langs
+            )
+            
+            if doctor_details_id:
+                success_doctors += 1
+                print(f"  ✓ Created Doctor Details: {title} {first_name} {last_name}")
+                
+                # Create patients for this doctor
+                for j in range(patients_per_doctor):
+                    patient_first = fake.first_name()
+                    patient_last = fake.last_name()
+                    patient_username = f"{patient_first.lower()}_{patient_last.lower()}{random.randint(1,9999)}"
+                    patient_email = f"{patient_username}@example.com"
+                    patient_phone = f"+60{random.choice(['16','17','18','19'])}{random.randint(1000000,9999999)}"
+                    patient_id = f"IC{random.randint(100000,699999)}"
+                    patient_gender = random.choice(['M','F'])
+                    
+                    patient_user_id = self.insert_single_user(
+                        username=patient_username,
+                        email=patient_email,
+                        user_type='patient',
+                        first_name=patient_first,
+                        last_name=patient_last,
+                        phone=patient_phone,
+                        password='patient123',
+                        identification=patient_id,
+                        gender=patient_gender,
+                        institute_id=institute_id
+                    )
+                    
+                    if not patient_user_id:
+                        continue
+                    
+                    # Create patient details
+                    blood_abo = random.choice(['A', 'B', 'AB', 'O'])
+                    blood_rh = random.choice(['+', '-'])
+                    emergency = f"+60{random.choice(['11','12','13','16','17'])}{random.randint(1000000,9999999)}"
+                    dob = fake.date_of_birth(minimum_age=18, maximum_age=85)
+                    
+                    patient_details_id = self.insert_patient_details(
+                        user_id=patient_user_id,
+                        abo_blood_type=blood_abo,
+                        rh_blood_type=blood_rh,
+                        emergency_contact=emergency,
+                        dob=dob
+                    )
+                    
+                    if patient_details_id:
+                        # Link patient to doctor (first patient is primary)
+                        is_primary = (j == 0)
+                        self.link_doctor_patient(patient_details_id, doctor_details_id, is_primary)
+                        success_patients += 1
+                        print(f"    → Assigned Patient: {patient_first} {patient_last} {'(Primary)' if is_primary else ''}")
+        
+        print(f"\n=== Generation Summary ===")
+        print(f"Doctors Created: {success_doctors}/{num_doctors}")
+        print(f"Patients Created: {success_patients}/{num_doctors * patients_per_doctor}")
+        print(f"Total Users: {success_doctors + success_patients}")
+        print(f"Institutes Used: {len(institute_ids)}")
 
     # -------------------------
     # User Statistics
@@ -174,102 +379,64 @@ class UserInserter:
             print("\nBy User Type:")
             for user_type, count in stats['by_type'].items():
                 print(f"  {user_type.capitalize()}: {count}")
+            
+            # Additional stats
+            if self.connection and self.connection.is_connected():
+                cursor = self.connection.cursor()
+                cursor.execute("SELECT COUNT(*) FROM patientdetails")
+                patient_details = cursor.fetchone()[0]
+                cursor.execute("SELECT COUNT(*) FROM doctordetails")
+                doctor_details = cursor.fetchone()[0]
+                cursor.execute("SELECT COUNT(*) FROM doctor_patient")
+                relationships = cursor.fetchone()[0]
+                cursor.close()
+                
+                print(f"\nPatient Details Records: {patient_details}")
+                print(f"Doctor Details Records: {doctor_details}")
+                print(f"Doctor-Patient Relationships: {relationships}")
             print("=" * 32)
 
     # -------------------------
-    # Deletion / Limiting Users
+    # Deletion Functions
     # -------------------------
-    def delete_user_by_id(self, user_id):
-        """Delete a user by UserID"""
-        if not self.connection or not self.connection.is_connected():
-            print("No database connection")
-            return False
-        try:
-            cursor = self.connection.cursor()
-            query = "DELETE FROM users WHERE UserID = %s"
-            cursor.execute(query, (user_id,))
-            self.connection.commit()
-            success = cursor.rowcount > 0
-            cursor.close()
-            if success:
-                print(f"✓ User with ID {user_id} deleted successfully")
-            else:
-                print(f"✗ No user found with ID {user_id}")
-            return success
-        except Error as e:
-            print(f"✗ Error deleting user: {e}")
-            return False
-
-    def delete_users_by_type(self, user_type):
-        """Delete all users of a specific type"""
-        if not self.connection or not self.connection.is_connected():
-            print("No database connection")
-            return False
-        try:
-            cursor = self.connection.cursor()
-            query = "DELETE FROM users WHERE UserType = %s"
-            cursor.execute(query, (user_type,))
-            self.connection.commit()
-            deleted_count = cursor.rowcount
-            print(f"✓ Deleted {deleted_count} {user_type}(s)")
-            cursor.close()
-            return deleted_count
-        except Error as e:
-            print(f"✗ Error deleting users: {e}")
-            return False
-
-    def clear_all_users(self, confirm=False):
-        """Clear all users from database (use with caution!)"""
+    def clear_all_data(self, confirm=False):
+        """Clear all data from database (use with caution!)"""
         if not confirm:
-            print("⚠️  WARNING: This will delete ALL users! Call with confirm=True")
+            print("⚠️  WARNING: This will delete ALL data! Call with confirm=True")
             return False
         if not self.connection or not self.connection.is_connected():
             print("No database connection")
             return False
         try:
             cursor = self.connection.cursor()
-            query = "DELETE FROM users"
-            cursor.execute(query)
+            # Disable foreign key checks temporarily
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
+            
+            # Delete in order to respect foreign key constraints
+            cursor.execute("DELETE FROM reminder")
+            cursor.execute("DELETE FROM compliance")
+            cursor.execute("DELETE FROM prescriptiondetail")
+            cursor.execute("DELETE FROM prescription")
+            cursor.execute("DELETE FROM appointment")
+            cursor.execute("DELETE FROM symptom")
+            cursor.execute("DELETE FROM disease_patientdetails")
+            cursor.execute("DELETE FROM doctor_patient")
+            cursor.execute("DELETE FROM doctordetails")
+            cursor.execute("DELETE FROM patientdetails")
+            cursor.execute("DELETE FROM users")
+            cursor.execute("DELETE FROM medicine")
+            cursor.execute("DELETE FROM disease")
+            cursor.execute("DELETE FROM institute")
+            
+            # Re-enable foreign key checks
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
+            
             self.connection.commit()
-            deleted_count = cursor.rowcount
-            print(f"✓ Deleted all {deleted_count} users")
             cursor.close()
-            return deleted_count
-        except Error as e:
-            print(f"✗ Error clearing users: {e}")
-            return False
-
-    def limit_users_by_type(self, user_type, max_count):
-        """Keep only the specified number of users of a type (keeps oldest)"""
-        if not self.connection or not self.connection.is_connected():
-            print("No database connection")
-            return False
-        try:
-            cursor = self.connection.cursor()
-            current_count = self.count_users(user_type)
-            if current_count <= max_count:
-                print(f"Current {user_type} count ({current_count}) is within limit ({max_count})")
-                return True
-            query = """
-            DELETE FROM users 
-            WHERE UserType = %s 
-            AND UserID NOT IN (
-                SELECT UserID FROM (
-                    SELECT UserID FROM users 
-                    WHERE UserType = %s 
-                    ORDER BY UserID ASC 
-                    LIMIT %s
-                ) AS keep_users
-            )
-            """
-            cursor.execute(query, (user_type, user_type, max_count))
-            self.connection.commit()
-            deleted_count = cursor.rowcount
-            print(f"✓ Reduced {user_type} count from {current_count} to {max_count} (Deleted {deleted_count} users)")
-            cursor.close()
+            print("✓ All data cleared successfully")
             return True
         except Error as e:
-            print(f"✗ Error limiting users: {e}")
+            print(f"✗ Error clearing data: {e}")
             return False
 
     # -------------------------
@@ -280,75 +447,35 @@ class UserInserter:
             self.connection.close()
             print("Database connection closed")
 
+
 # =========================
-# Bulk User Generation
+# Main Execution
 # =========================
-fake = Faker()
-
-def generate_users(count, user_type, institute_id=101):
-    """Generate a list of fake users"""
-    users = []
-    for _ in range(count):
-        first_name = fake.first_name()
-        last_name = fake.last_name()
-        username = f"{first_name.lower()}_{last_name.lower()}{random.randint(1,9999)}"
-        email = f"{username}@example.com"
-        phone = f"+60{random.choice(['11','12','13','16','17','18','19'])}{random.randint(1000000,9999999)}"
-        identification = f"IC{random.randint(100000,999999)}"
-        gender = random.choice(['M','F'])
-        password = "password123"
-        users.append({
-            'username': username,
-            'email': email,
-            'user_type': user_type,
-            'first_name': first_name,
-            'last_name': last_name,
-            'phone': phone,
-            'password': password,
-            'identification': identification,
-            'gender': gender,
-            'institute_id': institute_id
-        })
-    return users
-
-
-# Main Part
-
 if __name__ == "__main__":
+    # IMPORTANT: First create the tables by running cos10082_database.sql in MySQL Workbench
     inserter = UserInserter(
         host='localhost',
-        port=3307,
-        database='MedManageDB',
+        port=3307,  
+        database='medmanagedb',  # Corrected database name
         user='root',
-        password='root'  
+        password='root'  # Update with your password if needed
     )
 
     if inserter.connect():
-        print("\n--- Generating Users ---")
-        # Generate users
-        patients = generate_users(1000, 'patient', institute_id=101)
-        doctors = generate_users(100, 'doctor', institute_id=101)
-        admins = generate_users(5, 'admin', institute_id=101)
-        superadmin = [{
-            'username': 'superadmin',
-            'email': 'superadmin@example.com',
-            'user_type': 'super admin',
-            'first_name': 'Super',
-            'last_name': 'Admin',
-            'phone': '0123456789',
-            'password': 'admin',
-            'identification': 'IC000000',
-            'gender': 'M',
-            'institute_id': 101
-        }]
-        all_users = patients + doctors + admins + superadmin
-        print(f"Total users to insert: {len(all_users)}")
-
-        # Bulk insert
-        inserter.insert_bulk_users(all_users)
-
+        # Initialize 5 hardcoded institutes
+        inserter.initialize_institutes()
+        
+        # Generate doctors with patients
+        num_doctors = 20  
+        patients_per_doctor = 10  # Each doctor gets 10 patients
+        
+        inserter.insert_doctors_with_patients(
+            num_doctors=num_doctors,
+            patients_per_doctor=patients_per_doctor
+        )
+        
         # Print statistics
         inserter.print_statistics()
-
+        
         # Close connection
         inserter.close()
