@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql
--- Generation Time: Nov 17, 2025 at 12:00 PM
+-- Generation Time: Nov 17, 2025 at 04:46 PM
 -- Server version: 8.0.32
 -- PHP Version: 8.2.8
 
@@ -21,16 +21,16 @@ USE `medmanagedb`;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `appointment`
+-- Table structure for table `Appointment`
 --
 
-DROP TABLE IF EXISTS `appointment`;
-CREATE TABLE `appointment` (
+DROP TABLE IF EXISTS `Appointment`;
+CREATE TABLE `Appointment` (
   `AppointmentID` int NOT NULL,
   `PatientDetailID` int NOT NULL,
   `DoctorDetailID` int NOT NULL,
   `AppointmentOn` datetime NOT NULL,
-  `Details` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `Details` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `IsDoctorAccept` tinyint(1) DEFAULT NULL,
   `IsPatientAccept` tinyint(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores all appointments made and scheduled. The boolean fields are used to check if both pateitn and doctor are able to accept the appointment.';
@@ -38,38 +38,38 @@ CREATE TABLE `appointment` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `compliance`
+-- Table structure for table `Compliance`
 --
 
-DROP TABLE IF EXISTS `compliance`;
-CREATE TABLE `compliance` (
+DROP TABLE IF EXISTS `Compliance`;
+CREATE TABLE `Compliance` (
   `ComplianceID` int NOT NULL,
   `TakenOn` datetime NOT NULL,
   `PrescriptionID` int NOT NULL,
-  `DoseTaken` varchar(50) COLLATE utf8mb4_general_ci NOT NULL
+  `DoseTaken` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores whenever the patient takes a dose';
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `disease`
+-- Table structure for table `Disease`
 --
 
-DROP TABLE IF EXISTS `disease`;
-CREATE TABLE `disease` (
+DROP TABLE IF EXISTS `Disease`;
+CREATE TABLE `Disease` (
   `DiseaseID` int NOT NULL,
-  `Name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `Description` varchar(500) COLLATE utf8mb4_general_ci NOT NULL
+  `Name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='A record of diseases that the patients has contracted';
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `disease_patientdetails`
+-- Table structure for table `Disease_PatientDetails`
 --
 
-DROP TABLE IF EXISTS `disease_patientdetails`;
-CREATE TABLE `disease_patientdetails` (
+DROP TABLE IF EXISTS `Disease_PatientDetails`;
+CREATE TABLE `Disease_PatientDetails` (
   `DiseaseID` int NOT NULL,
   `PatientDetailsID` int NOT NULL,
   `Onset` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -79,28 +79,29 @@ CREATE TABLE `disease_patientdetails` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `doctordetails`
+-- Table structure for table `DoctorDetails`
 --
-DROP TABLE IF EXISTS `doctordetails`;
-CREATE TABLE `doctordetails` (
+
+DROP TABLE IF EXISTS `DoctorDetails`;
+CREATE TABLE `DoctorDetails` (
   `DoctorDetailsID` int NOT NULL,
   `UserID` int NOT NULL,
   `Specialist` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `MedicalLicenceNumber` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `MedicalLicenceNumber` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `YearsOfExperience` int NOT NULL,
-  `MedicalSchool` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `Certificates` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `MedicalSchool` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Certificates` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `LanguagesSpoken` json NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores Doctor details of a user';
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `doctor_patient`
+-- Table structure for table `Doctor_Patient`
 --
 
-DROP TABLE IF EXISTS `doctor_patient`;
-CREATE TABLE `doctor_patient` (
+DROP TABLE IF EXISTS `Doctor_Patient`;
+CREATE TABLE `Doctor_Patient` (
   `PatientDetailsID` int NOT NULL,
   `DoctorDetailsID` int NOT NULL,
   `IsPrimaryDoctor` tinyint(1) NOT NULL DEFAULT '0'
@@ -109,19 +110,19 @@ CREATE TABLE `doctor_patient` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `institute`
+-- Table structure for table `Institute`
 --
 
-DROP TABLE IF EXISTS `institute`;
-CREATE TABLE `institute` (
+DROP TABLE IF EXISTS `Institute`;
+CREATE TABLE `Institute` (
   `InstituteID` smallint UNSIGNED NOT NULL,
-  `Name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `AddressLine1` varchar(60) COLLATE utf8mb4_general_ci NOT NULL,
-  `AddressLine2` varchar(60) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `City` varchar(30) COLLATE utf8mb4_general_ci NOT NULL,
-  `StateProvinceCode` varchar(3) COLLATE utf8mb4_general_ci NOT NULL,
-  `Country` varchar(2) COLLATE utf8mb4_general_ci NOT NULL,
-  `PostalCode` varchar(15) COLLATE utf8mb4_general_ci NOT NULL
+  `Name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `AddressLine1` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `AddressLine2` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `City` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `StateProvinceCode` varchar(3) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Country` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `PostalCode` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Store all institutes that are using the system';
 
 -- --------------------------------------------------------
@@ -133,9 +134,9 @@ CREATE TABLE `institute` (
 DROP TABLE IF EXISTS `Log`;
 CREATE TABLE `Log` (
   `LogID` int NOT NULL,
-  `ActionType` enum('insert','update','delete') COLLATE utf8mb4_general_ci NOT NULL,
-  `TableName` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `Query` text COLLATE utf8mb4_general_ci NOT NULL,
+  `ActionType` enum('insert','update','delete') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `TableName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Query` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `CreatedOn` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `PerformedBy` timestamp NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -143,67 +144,67 @@ CREATE TABLE `Log` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `medicine`
+-- Table structure for table `Medicine`
 --
 
-DROP TABLE IF EXISTS `medicine`;
-CREATE TABLE `medicine` (
+DROP TABLE IF EXISTS `Medicine`;
+CREATE TABLE `Medicine` (
   `MedicineId` int NOT NULL,
-  `Name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `Brand` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `Description` varchar(500) COLLATE utf8mb4_general_ci NOT NULL
+  `Name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Brand` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Record of all possible Medicine';
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `patientdetails`
+-- Table structure for table `PatientDetails`
 --
 
-DROP TABLE IF EXISTS `patientdetails`;
-CREATE TABLE `patientdetails` (
+DROP TABLE IF EXISTS `PatientDetails`;
+CREATE TABLE `PatientDetails` (
   `PatientDetailsID` int NOT NULL,
   `UserID` int NOT NULL,
-  `ABOBloodType` enum('A','B','AB','O') COLLATE utf8mb4_general_ci NOT NULL,
-  `RhBloodType` enum('+','-') COLLATE utf8mb4_general_ci NOT NULL,
-  `EmergencyContact` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `ABOBloodType` enum('A','B','AB','O') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `RhBloodType` enum('+','-') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `EmergencyContact` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `DOB` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores patient details of a user';
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `prescription`
+-- Table structure for table `Prescription`
 --
 
-DROP TABLE IF EXISTS `prescription`;
-CREATE TABLE `prescription` (
+DROP TABLE IF EXISTS `Prescription`;
+CREATE TABLE `Prescription` (
   `PrescriptionID` int NOT NULL,
   `PatientDetailID` int NOT NULL,
   `DoctorDetailID` int NOT NULL,
   `PreviousPrescriptionID` int DEFAULT NULL,
   `MedicineID` int NOT NULL,
-  `TotalDose` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
-  `Remark` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `TotalDose` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `PrescribedOn` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores all prescriptions of a patient. Specific details of dosage and when to take them is stored in a "PatientDetails" table';
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `prescriptiondetail`
+-- Table structure for table `PrescriptionDetail`
 --
 
-DROP TABLE IF EXISTS `prescriptiondetail`;
-CREATE TABLE `prescriptiondetail` (
+DROP TABLE IF EXISTS `PrescriptionDetail`;
+CREATE TABLE `PrescriptionDetail` (
   `PrescriptionDetailID` int NOT NULL,
   `PrescriptionID` int NOT NULL,
   `IsTakeOnEffect` tinyint(1) NOT NULL DEFAULT '0',
   `StartOn` datetime DEFAULT NULL,
   `EndOn` datetime DEFAULT NULL,
-  `Dose` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `Dose` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `IntervalMinutes` int DEFAULT NULL,
-  `Remark` varchar(500) COLLATE utf8mb4_general_ci NOT NULL
+  `Remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores when the patient is to take the medication.';
 
 -- --------------------------------------------------------
@@ -222,11 +223,11 @@ CREATE TABLE `Prescription_SideEffect` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `reminder`
+-- Table structure for table `Reminder`
 --
 
-DROP TABLE IF EXISTS `reminder`;
-CREATE TABLE `reminder` (
+DROP TABLE IF EXISTS `Reminder`;
+CREATE TABLE `Reminder` (
   `ReminderID` int NOT NULL,
   `StartOn` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `EndOn` datetime DEFAULT NULL,
@@ -244,22 +245,21 @@ CREATE TABLE `reminder` (
 DROP TABLE IF EXISTS `SideEffect`;
 CREATE TABLE `SideEffect` (
   `SideEffectID` int NOT NULL,
-  `Name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `Description` varchar(100) COLLATE utf8mb4_general_ci NOT NULL
+  `Name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores any side effects that may have occurred when patient takes the medication';
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `symptom`
+-- Table structure for table `Symptom`
 --
 
-DROP TABLE IF EXISTS `symptom`;
-CREATE TABLE `symptom` (
+DROP TABLE IF EXISTS `Symptom`;
+CREATE TABLE `Symptom` (
   `SymptomID` int NOT NULL,
-  `PatientDetailsID` int NOT NULL,
-  `Description` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `CreatedOn` datetime NOT NULL
+  `Name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `Description` varchar(500) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -279,21 +279,21 @@ CREATE TABLE `Symptom_PatientDetails` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `users`
+-- Table structure for table `Users`
 --
 
-DROP TABLE IF EXISTS `users`;
-CREATE TABLE `users` (
+DROP TABLE IF EXISTS `Users`;
+CREATE TABLE `Users` (
   `UserID` int NOT NULL,
-  `Username` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `Email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `UserType` enum('superadmin','admin','doctor','patient') COLLATE utf8mb4_general_ci NOT NULL,
-  `FirstName` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `LastName` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `Username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `UserType` enum('superadmin','admin','doctor','patient') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `FirstName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `LastName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `Phone` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `PasswordHash` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `Identification` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
-  `Gender` enum('M','F') COLLATE utf8mb4_general_ci NOT NULL,
+  `PasswordHash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Identification` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Gender` enum('M','F') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `InstituteID` smallint UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores all users using the system';
 
@@ -302,51 +302,51 @@ CREATE TABLE `users` (
 --
 
 --
--- Indexes for table `appointment`
+-- Indexes for table `Appointment`
 --
-ALTER TABLE `appointment`
+ALTER TABLE `Appointment`
   ADD PRIMARY KEY (`AppointmentID`),
   ADD KEY `DoctorUserID` (`DoctorDetailID`),
   ADD KEY `PatientDetailID` (`PatientDetailID`);
 
 --
--- Indexes for table `compliance`
+-- Indexes for table `Compliance`
 --
-ALTER TABLE `compliance`
+ALTER TABLE `Compliance`
   ADD PRIMARY KEY (`ComplianceID`),
   ADD KEY `PrescriptionID` (`PrescriptionID`);
 
 --
--- Indexes for table `disease`
+-- Indexes for table `Disease`
 --
-ALTER TABLE `disease`
+ALTER TABLE `Disease`
   ADD PRIMARY KEY (`DiseaseID`);
 
 --
--- Indexes for table `disease_patientdetails`
+-- Indexes for table `Disease_PatientDetails`
 --
-ALTER TABLE `disease_patientdetails`
+ALTER TABLE `Disease_PatientDetails`
   ADD PRIMARY KEY (`DiseaseID`,`PatientDetailsID`),
   ADD KEY `PatientDetailsID` (`PatientDetailsID`);
 
 --
--- Indexes for table `doctordetails`
+-- Indexes for table `DoctorDetails`
 --
-ALTER TABLE `doctordetails`
+ALTER TABLE `DoctorDetails`
   ADD PRIMARY KEY (`DoctorDetailsID`),
   ADD KEY `UserID` (`UserID`);
 
 --
--- Indexes for table `doctor_patient`
+-- Indexes for table `Doctor_Patient`
 --
-ALTER TABLE `doctor_patient`
+ALTER TABLE `Doctor_Patient`
   ADD PRIMARY KEY (`PatientDetailsID`,`DoctorDetailsID`),
-  ADD KEY `doctor_patient_ibfk_1` (`DoctorDetailsID`);
+  ADD KEY `DoctorDetailsID` (`DoctorDetailsID`);
 
 --
--- Indexes for table `institute`
+-- Indexes for table `Institute`
 --
-ALTER TABLE `institute`
+ALTER TABLE `Institute`
   ADD PRIMARY KEY (`InstituteID`);
 
 --
@@ -356,22 +356,22 @@ ALTER TABLE `Log`
   ADD PRIMARY KEY (`LogID`);
 
 --
--- Indexes for table `medicine`
+-- Indexes for table `Medicine`
 --
-ALTER TABLE `medicine`
+ALTER TABLE `Medicine`
   ADD PRIMARY KEY (`MedicineId`);
 
 --
--- Indexes for table `patientdetails`
+-- Indexes for table `PatientDetails`
 --
-ALTER TABLE `patientdetails`
+ALTER TABLE `PatientDetails`
   ADD PRIMARY KEY (`PatientDetailsID`),
   ADD KEY `UserID` (`UserID`);
 
 --
--- Indexes for table `prescription`
+-- Indexes for table `Prescription`
 --
-ALTER TABLE `prescription`
+ALTER TABLE `Prescription`
   ADD PRIMARY KEY (`PrescriptionID`),
   ADD KEY `PatientID` (`PatientDetailID`),
   ADD KEY `DoctorID` (`DoctorDetailID`),
@@ -379,9 +379,10 @@ ALTER TABLE `prescription`
   ADD KEY `PreviousPrescriptionID` (`PreviousPrescriptionID`);
 
 --
--- Indexes for table `prescriptiondetail`
+-- Indexes for table `PrescriptionDetail`
 --
-ALTER TABLE `prescriptiondetail`
+ALTER TABLE `PrescriptionDetail`
+  ADD PRIMARY KEY (`PrescriptionDetailID`),
   ADD KEY `PrescriptionID` (`PrescriptionID`);
 
 --
@@ -392,9 +393,9 @@ ALTER TABLE `Prescription_SideEffect`
   ADD KEY `SideEffectID` (`SideEffectID`);
 
 --
--- Indexes for table `reminder`
+-- Indexes for table `Reminder`
 --
-ALTER TABLE `reminder`
+ALTER TABLE `Reminder`
   ADD PRIMARY KEY (`ReminderID`),
   ADD KEY `PrescriptionDetailID` (`PrescriptionDetailID`),
   ADD KEY `AppointmentID` (`AppointmentID`);
@@ -406,23 +407,22 @@ ALTER TABLE `SideEffect`
   ADD PRIMARY KEY (`SideEffectID`);
 
 --
--- Indexes for table `symptom`
+-- Indexes for table `Symptom`
 --
-ALTER TABLE `symptom`
-  ADD PRIMARY KEY (`SymptomID`),
-  ADD KEY `MedicalDetailsID` (`PatientDetailsID`);
+ALTER TABLE `Symptom`
+  ADD PRIMARY KEY (`SymptomID`);
 
 --
 -- Indexes for table `Symptom_PatientDetails`
 --
 ALTER TABLE `Symptom_PatientDetails`
-  ADD PRIMARY KEY (`SymptomID`,`PatientDetailsID`) USING BTREE,
+  ADD PRIMARY KEY (`SymptomID`,`PatientDetailsID`),
   ADD KEY `PatientDetailsID` (`PatientDetailsID`);
 
 --
--- Indexes for table `users`
+-- Indexes for table `Users`
 --
-ALTER TABLE `users`
+ALTER TABLE `Users`
   ADD PRIMARY KEY (`UserID`),
   ADD KEY `InstituteID` (`InstituteID`);
 
@@ -431,27 +431,33 @@ ALTER TABLE `users`
 --
 
 --
--- AUTO_INCREMENT for table `appointment`
+-- AUTO_INCREMENT for table `Appointment`
 --
-ALTER TABLE `appointment`
+ALTER TABLE `Appointment`
   MODIFY `AppointmentID` int NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `compliance`
+-- AUTO_INCREMENT for table `Compliance`
 --
-ALTER TABLE `compliance`
+ALTER TABLE `Compliance`
   MODIFY `ComplianceID` int NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `disease`
+-- AUTO_INCREMENT for table `Disease`
 --
-ALTER TABLE `disease`
+ALTER TABLE `Disease`
   MODIFY `DiseaseID` int NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `institute`
+-- AUTO_INCREMENT for table `DoctorDetails`
 --
-ALTER TABLE `institute`
+ALTER TABLE `DoctorDetails`
+  MODIFY `DoctorDetailsID` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `Institute`
+--
+ALTER TABLE `Institute`
   MODIFY `InstituteID` smallint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -461,27 +467,51 @@ ALTER TABLE `Log`
   MODIFY `LogID` int NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `medicine`
+-- AUTO_INCREMENT for table `Medicine`
 --
-ALTER TABLE `medicine`
+ALTER TABLE `Medicine`
   MODIFY `MedicineId` int NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `prescription`
+-- AUTO_INCREMENT for table `PatientDetails`
 --
-ALTER TABLE `prescription`
+ALTER TABLE `PatientDetails`
+  MODIFY `PatientDetailsID` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `Prescription`
+--
+ALTER TABLE `Prescription`
   MODIFY `PrescriptionID` int NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `reminder`
+-- AUTO_INCREMENT for table `PrescriptionDetail`
 --
-ALTER TABLE `reminder`
+ALTER TABLE `PrescriptionDetail`
+  MODIFY `PrescriptionDetailID` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `Reminder`
+--
+ALTER TABLE `Reminder`
   MODIFY `ReminderID` int NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `users`
+-- AUTO_INCREMENT for table `SideEffect`
 --
-ALTER TABLE `users`
+ALTER TABLE `SideEffect`
+  MODIFY `SideEffectID` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `Symptom`
+--
+ALTER TABLE `Symptom`
+  MODIFY `SymptomID` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `Users`
+--
+ALTER TABLE `Users`
   MODIFY `UserID` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -489,83 +519,77 @@ ALTER TABLE `users`
 --
 
 --
--- Constraints for table `appointment`
+-- Constraints for table `Compliance`
 --
-ALTER TABLE `appointment`
-  ADD CONSTRAINT `appointment_ibfk_1` FOREIGN KEY (`PatientDetailID`) REFERENCES `patientdetails` (`PatientDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `appointment_ibfk_2` FOREIGN KEY (`DoctorDetailID`) REFERENCES `doctordetails` (`DoctorDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Compliance`
+  ADD CONSTRAINT `Compliance_ibfk_1` FOREIGN KEY (`PrescriptionID`) REFERENCES `Prescription` (`PrescriptionID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `compliance`
+-- Constraints for table `Disease_PatientDetails`
 --
-ALTER TABLE `compliance`
-  ADD CONSTRAINT `compliance_ibfk_1` FOREIGN KEY (`PrescriptionID`) REFERENCES `prescription` (`PrescriptionID`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Disease_PatientDetails`
+  ADD CONSTRAINT `Disease_PatientDetails_ibfk_1` FOREIGN KEY (`DiseaseID`) REFERENCES `Disease` (`DiseaseID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `Disease_PatientDetails_ibfk_2` FOREIGN KEY (`PatientDetailsID`) REFERENCES `PatientDetails` (`PatientDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `disease_patientdetails`
+-- Constraints for table `DoctorDetails`
 --
-ALTER TABLE `disease_patientdetails`
-  ADD CONSTRAINT `disease_patientdetails_ibfk_1` FOREIGN KEY (`DiseaseID`) REFERENCES `disease` (`DiseaseID`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `disease_patientdetails_ibfk_2` FOREIGN KEY (`PatientDetailsID`) REFERENCES `patientdetails` (`PatientDetailsID`) ON UPDATE CASCADE;
+ALTER TABLE `DoctorDetails`
+  ADD CONSTRAINT `DoctorDetails_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `doctordetails`
+-- Constraints for table `Doctor_Patient`
 --
-ALTER TABLE `doctordetails`
-  ADD CONSTRAINT `doctordetails_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON UPDATE CASCADE;
+ALTER TABLE `Doctor_Patient`
+  ADD CONSTRAINT `Doctor_Patient_ibfk_1` FOREIGN KEY (`DoctorDetailsID`) REFERENCES `DoctorDetails` (`DoctorDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `Doctor_Patient_ibfk_2` FOREIGN KEY (`PatientDetailsID`) REFERENCES `PatientDetails` (`PatientDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `doctor_patient`
+-- Constraints for table `PatientDetails`
 --
-ALTER TABLE `doctor_patient`
-  ADD CONSTRAINT `doctor_patient_ibfk_1` FOREIGN KEY (`DoctorDetailsID`) REFERENCES `doctordetails` (`DoctorDetailsID`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `doctor_patient_ibfk_2` FOREIGN KEY (`PatientDetailsID`) REFERENCES `patientdetails` (`PatientDetailsID`) ON UPDATE CASCADE;
+ALTER TABLE `PatientDetails`
+  ADD CONSTRAINT `PatientDetails_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `PatientDetails_ibfk_2` FOREIGN KEY (`UserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
--- Constraints for table `patientdetails`
+-- Constraints for table `Prescription`
 --
-ALTER TABLE `patientdetails`
-  ADD CONSTRAINT `patientdetails_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON UPDATE CASCADE;
+ALTER TABLE `Prescription`
+  ADD CONSTRAINT `Prescription_ibfk_2` FOREIGN KEY (`DoctorDetailID`) REFERENCES `DoctorDetails` (`DoctorDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `Prescription_ibfk_3` FOREIGN KEY (`PreviousPrescriptionID`) REFERENCES `Prescription` (`PrescriptionID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `Prescription_ibfk_4` FOREIGN KEY (`MedicineID`) REFERENCES `Medicine` (`MedicineId`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `Prescription_ibfk_5` FOREIGN KEY (`PatientDetailID`) REFERENCES `PatientDetails` (`PatientDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `prescription`
+-- Constraints for table `PrescriptionDetail`
 --
-ALTER TABLE `prescription`
-  ADD CONSTRAINT `prescription_ibfk_3` FOREIGN KEY (`MedicineID`) REFERENCES `medicine` (`MedicineId`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `prescription_ibfk_4` FOREIGN KEY (`PreviousPrescriptionID`) REFERENCES `prescription` (`PrescriptionID`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `prescription_ibfk_5` FOREIGN KEY (`PatientDetailID`) REFERENCES `patientdetails` (`PatientDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `prescription_ibfk_6` FOREIGN KEY (`DoctorDetailID`) REFERENCES `doctordetails` (`DoctorDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `prescriptiondetail`
---
-ALTER TABLE `prescriptiondetail`
-  ADD CONSTRAINT `prescriptiondetail_ibfk_1` FOREIGN KEY (`PrescriptionID`) REFERENCES `prescription` (`PrescriptionID`) ON UPDATE CASCADE;
+ALTER TABLE `PrescriptionDetail`
+  ADD CONSTRAINT `PrescriptionDetail_ibfk_1` FOREIGN KEY (`PrescriptionID`) REFERENCES `Prescription` (`PrescriptionID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Constraints for table `Prescription_SideEffect`
 --
 ALTER TABLE `Prescription_SideEffect`
-  ADD CONSTRAINT `Prescription_SideEffect_ibfk_1` FOREIGN KEY (`PrescriptionID`) REFERENCES `prescription` (`PrescriptionID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `Prescription_SideEffect_ibfk_1` FOREIGN KEY (`PrescriptionID`) REFERENCES `Prescription` (`PrescriptionID`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `Prescription_SideEffect_ibfk_2` FOREIGN KEY (`SideEffectID`) REFERENCES `SideEffect` (`SideEffectID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `reminder`
+-- Constraints for table `Reminder`
 --
-ALTER TABLE `reminder`
-  ADD CONSTRAINT `reminder_ibfk_1` FOREIGN KEY (`PrescriptionDetailID`) REFERENCES `prescriptiondetail` (`PrescriptionID`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `reminder_ibfk_2` FOREIGN KEY (`AppointmentID`) REFERENCES `appointment` (`AppointmentID`) ON UPDATE CASCADE;
+ALTER TABLE `Reminder`
+  ADD CONSTRAINT `Reminder_ibfk_1` FOREIGN KEY (`PrescriptionDetailID`) REFERENCES `PrescriptionDetail` (`PrescriptionDetailID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `Reminder_ibfk_2` FOREIGN KEY (`AppointmentID`) REFERENCES `Appointment` (`AppointmentID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Constraints for table `Symptom_PatientDetails`
 --
 ALTER TABLE `Symptom_PatientDetails`
-  ADD CONSTRAINT `Symptom_PatientDetails_ibfk_1` FOREIGN KEY (`SymptomID`) REFERENCES `patientdetails` (`PatientDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `Symptom_PatientDetails_ibfk_2` FOREIGN KEY (`PatientDetailsID`) REFERENCES `patientdetails` (`PatientDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `Symptom_PatientDetails_ibfk_1` FOREIGN KEY (`SymptomID`) REFERENCES `Symptom` (`SymptomID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `Symptom_PatientDetails_ibfk_2` FOREIGN KEY (`PatientDetailsID`) REFERENCES `PatientDetails` (`PatientDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `users`
+-- Constraints for table `Users`
 --
-ALTER TABLE `users`
-  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`InstituteID`) REFERENCES `institute` (`InstituteID`) ON UPDATE CASCADE;
+ALTER TABLE `Users`
+  ADD CONSTRAINT `Users_ibfk_1` FOREIGN KEY (`InstituteID`) REFERENCES `Institute` (`InstituteID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 COMMIT;
