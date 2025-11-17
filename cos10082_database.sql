@@ -7,6 +7,7 @@
 -- Generation Time: Nov 06, 2025 at 05:53 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
+DROP DATABASE IF EXISTS `medmanagedb`;
 CREATE DATABASE IF NOT EXISTS `medmanagedb` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE `medmanagedb`;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";

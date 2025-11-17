@@ -12,6 +12,7 @@ CREATE PROCEDURE AddDoctor(
     IN p_Gender CHAR(1),
     IN p_InstituteID SMALLINT
 )
+
 BEGIN
     INSERT INTO users (
         Username, Email, UserType,
@@ -48,3 +49,4 @@ END;
 
 CALL AddDoctor('doc4','dr.jones@example.com','Sarah','Jones','0123456789','doc1','IC1234567','F',1);
 CALL AddDoctor('doc3','dr.smith@example.com','John','Smith','0987654321','doc2','IC7654321','M',1);
+ 
