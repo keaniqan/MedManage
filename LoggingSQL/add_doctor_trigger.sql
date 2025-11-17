@@ -6,8 +6,8 @@ FOR EACH ROW
 BEGIN
     -- Only log when a doctor is created
     IF NEW.UserType = 'doctor' THEN
-        INSERT INTO systemlogdb.user_action_log (ActionType, Username, UserType)
-        VALUES ('CREATE_DOCTOR', NEW.Username, NEW.UserType);
+        INSERT INTO medmanagedb.user_action_log (ActionType, TableName, Query)
+        VALUES ('INSERT', 'users', CONCAT('Inserted doctor with Username: ', NEW.Username));
     END IF;
 END 
 

@@ -10,10 +10,18 @@ CREATE PROCEDURE AddDoctor(
     IN p_Password VARCHAR(255),
     IN p_Identification VARCHAR(20),
     IN p_Gender CHAR(1),
-    IN p_InstituteID SMALLINT
+    IN p_InstituteID SMALLINT,
+    IN p_Specialization VARCHAR(100),
+    IN p_MedicalLicenceNumber VARCHAR(50),
+    IN p_YearsOfExperience INT,
+    IN p_MedicalSchool VARCHAR(100),
+    IN p_Certificates VARCHAR(100),
+    IN p_LanguagesSpoken JSON
 )
 
 BEGIN
+    DECLARE v_UserID INT;
+    
     INSERT INTO users (
         Username, Email, UserType,
         FirstName, LastName, Phone, PasswordHash,
@@ -23,6 +31,16 @@ BEGIN
         p_FirstName, p_LastName, p_Phone,
         SHA2(p_Password, 256),
         p_Identification, p_Gender, p_InstituteID
+    );
+
+    SET v_UserID = LAST_INSERT_ID();
+
+    INSERT INTO doctordetails (
+        UserID, Specialization, MedicalLicenceNumber, YearsOfExperience,
+        MedicalSchool, Certificates, LanguagesSpoken
+    ) VALUES (
+        v_UserID, p_Specialization, p_MedicalLicenceNumber, p_YearsOfExperience,
+        p_MedicalSchool, p_Certificates, p_LanguagesSpoken
     );
 
     -- Create MySQL account (requires proper privileges; remove if not needed)
@@ -45,8 +63,16 @@ BEGIN
     DEALLOCATE PREPARE stmt2;
 
     FLUSH PRIVILEGES;
-END;
 
-CALL AddDoctor('doc4','dr.jones@example.com','Sarah','Jones','0123456789','doc1','IC1234567','F',1);
-CALL AddDoctor('doc3','dr.smith@example.com','John','Smith','0987654321','doc2','IC7654321','M',1);
- 
+    INSERT INTO user_action_log (ActionType, TableName, Query)
+    VALUES (
+        'INSERT',
+        'users',
+        CONCAT('CALL AddDoctor(''', p_Username, ''',''', p_Email, ''',''', 
+               p_FirstName, ''',''', p_LastName, ''',''', p_Phone, ''',''',
+               p_Password, ''',''', p_Identification, ''',''', p_Gender, ''',',
+               p_InstituteID, ');')
+    );
+END;
+CALL AddDoctor('doc7','dr.smith@example.com','John','Smith','0987654321','doc7','IC7654321','M',1,'Cardiology','ML123456',10,'Harvard Medical School','Board Certified','["English", "Malay"]');
+

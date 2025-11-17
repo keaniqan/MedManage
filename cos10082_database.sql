@@ -84,17 +84,16 @@ CREATE TABLE `disease_patientdetails` (
 --
 -- Table structure for table `doctordetails`
 --
-
 DROP TABLE IF EXISTS `doctordetails`;
 CREATE TABLE `doctordetails` (
   `DoctorDetailsID` int(11) NOT NULL,
   `UserID` int(11) NOT NULL,
-  `Title` varchar(100) NOT NULL,
+  `Specialization` varchar(100) NOT NULL,
   `MedicalLicenceNumber` varchar(50) NOT NULL,
   `YearsOfExperience` int(11) NOT NULL,
   `MedicalSchool` varchar(100) NOT NULL,
   `Certificates` varchar(100) NOT NULL,
-  `LanguagesSpoken` varchar(100) NOT NULL
+  `LanguagesSpoken` JSON NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores Doctor details of a user';
 
 -- --------------------------------------------------------
