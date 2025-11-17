@@ -1,8 +1,34 @@
-import mysql.connector
-from mysql.connector import Error
+try:
+    import mysql.connector
+    from mysql.connector import Error
+except ModuleNotFoundError as e:
+    raise SystemExit(
+        "mysql.connector not found. Fix with:\n"
+        "pip uninstall -y mysql mysql-connector\n"
+        "pip install -U mysql-connector-python"
+    )
+import json
 import hashlib
 import random
+from turtle import title
 from faker import Faker
+
+def _print_mysql_connector_info():
+    try:
+        import mysql
+        ver = getattr(getattr(mysql, "connector", None), "__version__", None)
+        if ver:
+            print(f"mysql-connector-python version: {ver}")
+        else:
+            # Shadowing package present
+            print(
+                "Detected conflicting 'mysql' package without connector. Run:\n"
+                "pip uninstall -y mysql mysql-connector && pip install -U mysql-connector-python"
+            )
+    except Exception:
+        pass
+
+_print_mysql_connector_info()
 
 # =========================
 # UserInserter Class
@@ -32,6 +58,8 @@ class UserInserter:
                 return True
         except Error as e:
             print(f"Error connecting to MySQL: {e}")
+            print("If this is an import error, reinstall:\n"
+                  "pip uninstall -y mysql mysql-connector && pip install -U mysql-connector-python")
             return False
 
     def hash_password(self, password):
@@ -94,7 +122,7 @@ class UserInserter:
     # -------------------------
     # Insert Doctor Details
     # -------------------------
-    def insert_doctor_details(self, user_id, title, medical_licence_number, 
+    def insert_doctor_details(self, user_id, specialist, medical_licence_number, 
                              years_of_experience, medical_school, certificates, languages_spoken):
         """Insert doctor details"""
         if not self.connection or not self.connection.is_connected():
@@ -103,12 +131,12 @@ class UserInserter:
         try:
             cursor = self.connection.cursor()
             query = """
-            INSERT INTO doctordetails (UserID, Title, MedicalLicenceNumber, YearsOfExperience,
+            INSERT INTO doctordetails (UserID, Specialist, MedicalLicenceNumber, YearsOfExperience,
                                        MedicalSchool, Certificates, LanguagesSpoken)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
-            values = (user_id, title, medical_licence_number, years_of_experience,
-                     medical_school, certificates, languages_spoken)
+            values = (user_id, specialist, medical_licence_number, years_of_experience,
+                     medical_school, certificates, json.dumps(languages_spoken))
             cursor.execute(query, values)
             self.connection.commit()
             doctor_details_id = cursor.lastrowid
@@ -209,7 +237,12 @@ class UserInserter:
             'MBBS, MRCP', 'MBBS, FRCS', 'MD, FACP',
             'MBBS, MMed', 'MD, PhD', 'MBBS, FRCPE'
         ]
-        languages = ['English, Malay', 'English, Mandarin', 'English, Tamil', 'English, Malay, Mandarin']
+        languages = [
+            ["English", "Malay"],
+            ["English", "Mandarin"],
+            ["English", "Tamil"],
+            ["English", "Malay", "Mandarin"]
+        ]
         
         # Get list of institute IDs
         cursor = self.connection.cursor()
@@ -254,7 +287,7 @@ class UserInserter:
                 continue
             
             # Create doctor details
-            title = random.choice(titles)
+            specialist = random.choice(['Cardiologist', 'Dermatologist', 'Neurologist', 'Pediatrician', 'General Practitioner', 'Orthopedic Surgeon'])
             medical_licence = f"MMC{random.randint(10000,99999)}"
             years_exp = random.randint(5, 30)
             school = random.choice(medical_schools)
@@ -263,7 +296,7 @@ class UserInserter:
             
             doctor_details_id = self.insert_doctor_details(
                 user_id=doctor_user_id,
-                title=title,
+                specialist=specialist,
                 medical_licence_number=medical_licence,
                 years_of_experience=years_exp,
                 medical_school=school,
@@ -273,7 +306,7 @@ class UserInserter:
             
             if doctor_details_id:
                 success_doctors += 1
-                print(f"  ✓ Created Doctor Details: {title} {first_name} {last_name}")
+                print(f"  ✓ Created Doctor Details: {specialist} {first_name} {last_name}")
                 
                 # Create patients for this doctor
                 for j in range(patients_per_doctor):

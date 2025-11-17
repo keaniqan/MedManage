@@ -36,7 +36,7 @@ BEGIN
     SET v_UserID = LAST_INSERT_ID();
 
     INSERT INTO doctordetails (
-        UserID, Specialization, MedicalLicenceNumber, YearsOfExperience,
+        UserID, Specialist, MedicalLicenceNumber, YearsOfExperience,
         MedicalSchool, Certificates, LanguagesSpoken
     ) VALUES (
         v_UserID, p_Specialization, p_MedicalLicenceNumber, p_YearsOfExperience,
