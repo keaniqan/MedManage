@@ -1,17 +1,14 @@
 import mysql.connector
 from mysql.connector import Error
 import hashlib
-import csv
-import json
 import random
-from datetime import datetime, timedelta
 from faker import Faker
 
 # =========================
 # UserInserter Class
 # =========================
 class UserInserter:
-    def __init__(self, host='localhost', port=3307, database='cos10082_med_manage', user='root', password=''):
+    def __init__(self, host='localhost', port=3307, database='medmanagedb', user='root', password='root'):
         """Initialize database connection"""
         self.host = host
         self.port = port
@@ -64,6 +61,7 @@ class UserInserter:
             self.connection.commit()
             user_id = cursor.lastrowid
             cursor.close()
+            print(f"✓ Created User: {first_name} {last_name} ({user_type})")
             return user_id
         except Error as e:
             print(f"✗ Error inserting user '{username}': {e}")
@@ -144,10 +142,59 @@ class UserInserter:
             return False
 
     # -------------------------
+    # Initialize Institutes
+    # -------------------------
+    def initialize_institutes(self):
+        """Insert 5 hardcoded institutes into the database"""
+        if not self.connection or not self.connection.is_connected():
+            print("No database connection")
+            return False
+        
+        institutes = [
+            ('Sarawak General Hospital', 'Jalan Hospital', None, 'Kuching', 'SWK', 'MY', '93586'),
+            ('Normah Medical Specialist Centre', 'Jalan Tun Abdul Rahman Yakub', None, 'Kuching', 'SWK', 'MY', '93350'),
+            ('Timberland Medical Centre', 'Jalan Rock', 'Taman Rock', 'Kuching', 'SWK', 'MY', '93200'),
+            ('Borneo Medical Centre', 'Jalan Tun Jugah', None, 'Kuching', 'SWK', 'MY', '93350'),
+            ('KPJ Healthcare Kuching', 'Lot 1230 & 1231 Section 66 KTLD', 'Jalan Tun Ahmad Zaidi Adruce', 'Kuching', 'SWK', 'MY', '93200')
+        ]
+        
+        try:
+            cursor = self.connection.cursor()
+            
+            # Check if institutes already exist
+            cursor.execute("SELECT COUNT(*) FROM institute")
+            count = cursor.fetchone()[0]
+            
+            if count >= 5:
+                print("✓ Institutes already exist in database")
+                cursor.close()
+                return True
+            
+            # Clear existing institutes and insert new ones
+            cursor.execute("DELETE FROM institute")
+            
+            query = """
+            INSERT INTO institute (Name, AddressLine1, AddressLine2, City, StateProvinceCode, Country, PostalCode)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            
+            for institute in institutes:
+                cursor.execute(query, institute)
+            
+            self.connection.commit()
+            cursor.close()
+            print(f"✓ Successfully inserted {len(institutes)} institutes")
+            return True
+            
+        except Error as e:
+            print(f"✗ Error initializing institutes: {e}")
+            return False
+
+    # -------------------------
     # Bulk Insert with Relations
     # -------------------------
-    def insert_doctors_with_patients(self, num_doctors, patients_per_doctor, institute_id=101):
-        """Insert doctors and assign patients to them"""
+    def insert_doctors_with_patients(self, num_doctors, patients_per_doctor=10):
+        """Insert doctors and assign patients to them (distributed across institutes)"""
         fake = Faker()
         
         print(f"\n--- Generating {num_doctors} Doctors with {patients_per_doctor} Patients Each ---")
@@ -164,10 +211,23 @@ class UserInserter:
         ]
         languages = ['English, Malay', 'English, Mandarin', 'English, Tamil', 'English, Malay, Mandarin']
         
+        # Get list of institute IDs
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT InstituteID FROM institute")
+        institute_ids = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        
+        if not institute_ids:
+            print("✗ No institutes found in database!")
+            return
+        
         success_doctors = 0
         success_patients = 0
         
         for i in range(num_doctors):
+            # Distribute doctors across institutes
+            institute_id = institute_ids[i % len(institute_ids)]
+            
             # Create doctor user
             first_name = fake.first_name()
             last_name = fake.last_name()
@@ -213,7 +273,7 @@ class UserInserter:
             
             if doctor_details_id:
                 success_doctors += 1
-                print(f"✓ Created Doctor: {title} {first_name} {last_name}")
+                print(f"  ✓ Created Doctor Details: {title} {first_name} {last_name}")
                 
                 # Create patients for this doctor
                 for j in range(patients_per_doctor):
@@ -260,11 +320,13 @@ class UserInserter:
                         is_primary = (j == 0)
                         self.link_doctor_patient(patient_details_id, doctor_details_id, is_primary)
                         success_patients += 1
+                        print(f"    → Assigned Patient: {patient_first} {patient_last} {'(Primary)' if is_primary else ''}")
         
         print(f"\n=== Generation Summary ===")
         print(f"Doctors Created: {success_doctors}/{num_doctors}")
         print(f"Patients Created: {success_patients}/{num_doctors * patients_per_doctor}")
         print(f"Total Users: {success_doctors + success_patients}")
+        print(f"Institutes Used: {len(institute_ids)}")
 
     # -------------------------
     # User Statistics
@@ -347,11 +409,28 @@ class UserInserter:
             return False
         try:
             cursor = self.connection.cursor()
+            # Disable foreign key checks temporarily
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
+            
             # Delete in order to respect foreign key constraints
+            cursor.execute("DELETE FROM reminder")
+            cursor.execute("DELETE FROM compliance")
+            cursor.execute("DELETE FROM prescriptiondetail")
+            cursor.execute("DELETE FROM prescription")
+            cursor.execute("DELETE FROM appointment")
+            cursor.execute("DELETE FROM symptom")
+            cursor.execute("DELETE FROM disease_patientdetails")
             cursor.execute("DELETE FROM doctor_patient")
             cursor.execute("DELETE FROM doctordetails")
             cursor.execute("DELETE FROM patientdetails")
             cursor.execute("DELETE FROM users")
+            cursor.execute("DELETE FROM medicine")
+            cursor.execute("DELETE FROM disease")
+            cursor.execute("DELETE FROM institute")
+            
+            # Re-enable foreign key checks
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
+            
             self.connection.commit()
             cursor.close()
             print("✓ All data cleared successfully")
@@ -377,33 +456,22 @@ if __name__ == "__main__":
     inserter = UserInserter(
         host='localhost',
         port=3307,  
-        database='cos10082_med_manage',  
+        database='medmanagedb',  # Corrected database name
         user='root',
-        password='root' 
+        password='root'  # Update with your password if needed
     )
 
     if inserter.connect():
-        cursor = inserter.connection.cursor()
-        cursor.execute("SELECT COUNT(*) FROM institute")
-        count = cursor.fetchone()[0]
-
-        if count == 0:
-            cursor.execute("""
-                INSERT INTO institute (Name, AddressLine1, City, StateProvinceCode, Country, PostalCode)
-                VALUES ('Health Institute', '123 Main St', 'Kuching', 'SR', 'MY', '93000')
-            """)
-            inserter.connection.commit()
-            print("✓ Added default institute")
-        cursor.close()
+        # Initialize 5 hardcoded institutes
+        inserter.initialize_institutes()
+        
         # Generate doctors with patients
-        # Each doctor will have 5 patients assigned to them
         num_doctors = 20  
-        patients_per_doctor = 5
+        patients_per_doctor = 10  # Each doctor gets 10 patients
         
         inserter.insert_doctors_with_patients(
             num_doctors=num_doctors,
-            patients_per_doctor=patients_per_doctor,
-            institute_id=1  
+            patients_per_doctor=patients_per_doctor
         )
         
         # Print statistics
