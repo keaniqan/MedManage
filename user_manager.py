@@ -120,11 +120,74 @@ class UserInserter:
             return False
 
     # -------------------------
-    # Insert Doctor Details
+    # Insert Doctor Using Stored Procedure
+    # -------------------------
+    def insert_doctor_with_procedure(self, username, email, first_name, last_name,
+                                     phone, password, identification, gender, institute_id,
+                                     specialist, medical_licence_number, years_of_experience,
+                                     medical_school, certificates, languages_spoken):
+        """Insert a doctor using the AddDoctor stored procedure"""
+        if not self.connection or not self.connection.is_connected():
+            print("No database connection")
+            return False
+        try:
+            cursor = self.connection.cursor()
+            
+            # Convert languages_spoken list to JSON string if it's a list
+            if isinstance(languages_spoken, list):
+                languages_json = json.dumps(languages_spoken)
+            else:
+                languages_json = languages_spoken
+            
+            # Call the stored procedure
+            cursor.callproc('AddDoctor', [
+                username,
+                email,
+                first_name,
+                last_name,
+                phone,
+                password,  # Plain password - procedure will hash it
+                identification,
+                gender,
+                institute_id,
+                specialist,
+                medical_licence_number,
+                years_of_experience,
+                medical_school,
+                certificates,
+                languages_json
+            ])
+            
+            self.connection.commit()
+            
+            # Get the UserID that was created
+            cursor.execute("SELECT UserID FROM users WHERE Username = %s", (username,))
+            result = cursor.fetchone()
+            user_id = result[0] if result else None
+            
+            # Get the DoctorDetailsID
+            if user_id:
+                cursor.execute("SELECT DoctorDetailsID FROM doctordetails WHERE UserID = %s", (user_id,))
+                result = cursor.fetchone()
+                doctor_details_id = result[0] if result else None
+            else:
+                doctor_details_id = None
+            
+            cursor.close()
+            
+            print(f"✓ Created Doctor via Stored Procedure: {first_name} {last_name} ({specialist})")
+            return doctor_details_id
+            
+        except Error as e:
+            print(f"✗ Error calling AddDoctor procedure for '{username}': {e}")
+            return False
+
+    # -------------------------
+    # Insert Doctor Details (Keep for backward compatibility)
     # -------------------------
     def insert_doctor_details(self, user_id, specialist, medical_licence_number, 
                              years_of_experience, medical_school, certificates, languages_spoken):
-        """Insert doctor details"""
+        """Insert doctor details (legacy method - kept for compatibility)"""
         if not self.connection or not self.connection.is_connected():
             print("No database connection")
             return False
@@ -219,10 +282,10 @@ class UserInserter:
             return False
 
     # -------------------------
-    # Bulk Insert with Relations
+    # Bulk Insert with Relations (UPDATED TO USE STORED PROCEDURE)
     # -------------------------
     def insert_doctors_with_patients(self, num_doctors, patients_per_doctor=10):
-        """Insert doctors and assign patients to them (distributed across institutes)"""
+        """Insert doctors using stored procedure and assign patients to them"""
         fake = Faker()
         
         print(f"\n--- Generating {num_doctors} Doctors with {patients_per_doctor} Patients Each ---")
@@ -261,7 +324,7 @@ class UserInserter:
             # Distribute doctors across institutes
             institute_id = institute_ids[i % len(institute_ids)]
             
-            # Create doctor user
+            # Generate doctor data
             first_name = fake.first_name()
             last_name = fake.last_name()
             username = f"dr_{first_name.lower()}_{last_name.lower()}{random.randint(1,999)}"
@@ -270,32 +333,25 @@ class UserInserter:
             identification = f"IC{random.randint(700000,999999)}"
             gender = random.choice(['M','F'])
             
-            doctor_user_id = self.insert_single_user(
-                username=username,
-                email=email,
-                user_type='doctor',
-                first_name=first_name,
-                last_name=last_name,
-                phone=phone,
-                password='doctor123',
-                identification=identification,
-                gender=gender,
-                institute_id=institute_id
-            )
-            
-            if not doctor_user_id:
-                continue
-            
-            # Create doctor details
-            specialist = random.choice(['Cardiologist', 'Dermatologist', 'Neurologist', 'Pediatrician', 'General Practitioner', 'Orthopedic Surgeon'])
+            specialist = random.choice(['Cardiologist', 'Dermatologist', 'Neurologist', 
+                                       'Pediatrician', 'General Practitioner', 'Orthopedic Surgeon'])
             medical_licence = f"MMC{random.randint(10000,99999)}"
             years_exp = random.randint(5, 30)
             school = random.choice(medical_schools)
             cert = random.choice(certificates)
             langs = random.choice(languages)
             
-            doctor_details_id = self.insert_doctor_details(
-                user_id=doctor_user_id,
+            # Use stored procedure to create doctor
+            doctor_details_id = self.insert_doctor_with_procedure(
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                phone=phone,
+                password='doctor123',
+                identification=identification,
+                gender=gender,
+                institute_id=institute_id,
                 specialist=specialist,
                 medical_licence_number=medical_licence,
                 years_of_experience=years_exp,
@@ -306,7 +362,6 @@ class UserInserter:
             
             if doctor_details_id:
                 success_doctors += 1
-                print(f"  ✓ Created Doctor Details: {specialist} {first_name} {last_name}")
                 
                 # Create patients for this doctor
                 for j in range(patients_per_doctor):
@@ -489,18 +544,18 @@ if __name__ == "__main__":
     inserter = UserInserter(
         host='localhost',
         port=3307,  
-        database='medmanagedb',  # Corrected database name
+        database='medmanagedb',
         user='root',
-        password='root'  # Update with your password if needed
+        password='root'
     )
 
     if inserter.connect():
         # Initialize 5 hardcoded institutes
         inserter.initialize_institutes()
         
-        # Generate doctors with patients
+        # Generate doctors with patients (now using stored procedure)
         num_doctors = 20  
-        patients_per_doctor = 10  # Each doctor gets 10 patients
+        patients_per_doctor = 10
         
         inserter.insert_doctors_with_patients(
             num_doctors=num_doctors,
