@@ -27,8 +27,8 @@ USE `medmanagedb`;
 DROP TABLE IF EXISTS `Appointment`;
 CREATE TABLE `Appointment` (
   `AppointmentID` int NOT NULL,
-  `PatientDetailID` int NOT NULL,
-  `DoctorDetailID` int NOT NULL,
+  `PatientUserID` int NOT NULL,
+  `DoctorUserID` int NOT NULL,
   `AppointmentOn` datetime NOT NULL,
   `Details` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `IsDoctorAccept` tinyint(1) DEFAULT NULL,
@@ -180,8 +180,8 @@ CREATE TABLE `PatientDetails` (
 DROP TABLE IF EXISTS `Prescription`;
 CREATE TABLE `Prescription` (
   `PrescriptionID` int NOT NULL,
-  `PatientDetailID` int NOT NULL,
-  `DoctorDetailID` int NOT NULL,
+  `PatientUserID` int NOT NULL,
+  `DoctorUserID` int NOT NULL,
   `PreviousPrescriptionID` int DEFAULT NULL,
   `MedicineID` int NOT NULL,
   `TotalDose` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
@@ -306,8 +306,8 @@ CREATE TABLE `Users` (
 --
 ALTER TABLE `Appointment`
   ADD PRIMARY KEY (`AppointmentID`),
-  ADD KEY `DoctorUserID` (`DoctorDetailID`),
-  ADD KEY `PatientDetailID` (`PatientDetailID`);
+  ADD KEY `DoctorUserID` (`DoctorUserID`),
+  ADD KEY `PatientUserID` (`PatientUserID`);
 
 --
 -- Indexes for table `Compliance`
@@ -373,8 +373,8 @@ ALTER TABLE `PatientDetails`
 --
 ALTER TABLE `Prescription`
   ADD PRIMARY KEY (`PrescriptionID`),
-  ADD KEY `PatientID` (`PatientDetailID`),
-  ADD KEY `DoctorID` (`DoctorDetailID`),
+  ADD KEY `PatientID` (`PatientUserID`),
+  ADD KEY `DoctorID` (`DoctorUserID`),
   ADD KEY `MedicineID` (`MedicineID`),
   ADD KEY `PreviousPrescriptionID` (`PreviousPrescriptionID`);
 
@@ -518,6 +518,13 @@ ALTER TABLE `Users`
 -- Constraints for dumped tables
 --
 
+-- 
+-- Constraints for table `Appointment`
+-- 
+ALTER table `Appointment`
+  ADD CONSTRAINT `Appointment_ibfk_1` FOREIGN KEY (`PatientUserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `Appointment_ibfk_2` FOREIGN KEY (`DoctorUserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
 --
 -- Constraints for table `Compliance`
 --
@@ -555,10 +562,10 @@ ALTER TABLE `PatientDetails`
 -- Constraints for table `Prescription`
 --
 ALTER TABLE `Prescription`
-  ADD CONSTRAINT `Prescription_ibfk_2` FOREIGN KEY (`DoctorDetailID`) REFERENCES `DoctorDetails` (`DoctorDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `Prescription_ibfk_2` FOREIGN KEY (`DoctorUserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `Prescription_ibfk_3` FOREIGN KEY (`PreviousPrescriptionID`) REFERENCES `Prescription` (`PrescriptionID`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `Prescription_ibfk_4` FOREIGN KEY (`MedicineID`) REFERENCES `Medicine` (`MedicineId`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `Prescription_ibfk_5` FOREIGN KEY (`PatientDetailID`) REFERENCES `PatientDetails` (`PatientDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `Prescription_ibfk_5` FOREIGN KEY (`PatientUserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Constraints for table `PrescriptionDetail`
