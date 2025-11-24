@@ -601,10 +601,13 @@ ALTER TABLE `Users`
   ADD CONSTRAINT `Users_ibfk_1` FOREIGN KEY (`InstituteID`) REFERENCES `Institute` (`InstituteID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 COMMIT;
 
----------------------------------
+-- ------------------------------
 -- Add Doctor Stored Procedure --
----------------------------------
+-- ------------------------------
 DROP PROCEDURE IF EXISTS AddDoctor;
+
+set FOREIGN_KEY_CHECKS=0;
+
 CREATE PROCEDURE AddDoctor(
     IN p_Username VARCHAR(100),
     IN p_Email VARCHAR(100),
@@ -689,9 +692,9 @@ BEGIN
     );
 END;
 
-------------------------------------
+-- ---------------------------------
 -- Delete Doctor Stored Procedure --
-------------------------------------
+-- ---------------------------------
 
 DROP PROCEDURE IF EXISTS DeleteDoctor;
 
@@ -711,11 +714,11 @@ BEGIN
         'users',
         CONCAT('CALL DeleteDoctor(', p_UserID, ');')
     );
-END;
+END; 
 
-----------------------------------
+-- -------------------------------
 -- Edit Doctor Stored Procedure --
-----------------------------------
+-- -------------------------------
 
 DROP PROCEDURE IF EXISTS UpdateDoctor;
 
@@ -738,13 +741,12 @@ BEGIN
         'users',
         CONCAT('CALL UpdateDoctor(', p_UserID, ', ''', p_FieldName, ''', ''', p_NewValue, ''');')
     );
-END;
+  END;
 
-------------------------------------
+-- ---------------------------------
 -- Filter Doctor Stored Procedure --
-------------------------------------
+-- ---------------------------------
 DROP PROCEDURE IF EXISTS FilterDoctors;
-
 CREATE PROCEDURE FilterDoctors(
     IN p_DoctorDetailsID INT,
     IN p_UserID INT,
