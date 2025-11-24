@@ -22,7 +22,7 @@ FROM
     INNER JOIN PatientDetails pd ON dp.PatientDetailsID = pd.PatientDetailsID
     INNER JOIN Users u ON pd.UserID = u.UserID
 WHERE 
-    dp.DoctorDetailsID = ? -- Replace ? with the specific DoctorDetailsID parameter
+    dp.DoctorDetailsID = 4 -- Replace ? with the specific DoctorDetailsID parameter
 ORDER BY 
     dp.IsPrimaryDoctor DESC, 
     u.LastName, 

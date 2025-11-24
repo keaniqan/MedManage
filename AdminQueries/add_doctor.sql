@@ -62,6 +62,16 @@ BEGIN
     EXECUTE stmt2;
     DEALLOCATE PREPARE stmt2;
 
+     -- Grant privileges on doctordetails as well
+    SET @grant_sql2 = CONCAT(
+        'GRANT SELECT, INSERT, UPDATE ON `medmanagedb`.`doctordetails` TO `',
+        REPLACE(p_Username,'`','``'),
+        '`@`localhost`;'
+    );
+    PREPARE stmt3 FROM @grant_sql2;
+    EXECUTE stmt3;
+    DEALLOCATE PREPARE stmt3;
+
     FLUSH PRIVILEGES;
 
     INSERT INTO user_action_log (ActionType, TableName, Query)
@@ -74,5 +84,5 @@ BEGIN
                p_InstituteID, ');')
     );
 END;
-CALL AddDoctor('doc7','dr.smith@example.com','John','Smith','0987654321','doc7','IC7654321','M',1,'Cardiology','ML123456',10,'Harvard Medical School','Board Certified','["English", "Malay"]');
+
 
