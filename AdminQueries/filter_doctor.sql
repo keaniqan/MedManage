@@ -32,13 +32,14 @@ DELIMITER ;
 
 -- Usage examples:
 -- Filter by specialist only
-CALL FilterDoctors(NULL, NULL, 'Cardiology', NULL, NULL, NULL, NULL, NULL);
+CALL FilterDoctors(NULL, NULL, 'Neurologist', NULL, NULL, NULL, NULL, NULL);
 
 -- Filter by medical school and years of experience
-CALL FilterDoctors(NULL, NULL, NULL, NULL, 10, NULL, NULL, NULL);
+CALL FilterDoctors(NULL, NULL, NULL, NULL, 13, NULL, NULL, NULL);
 
 -- Filter by language spoken (searches within JSON array)
 CALL FilterDoctors(NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'English');
 
+CALL FilterDoctors(NULL, NULL, 'Neurologist', NULL, NULL, NULL, NULL, 'Malay');
 -- Get all doctors
 CALL FilterDoctors(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
