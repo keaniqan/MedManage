@@ -601,6 +601,30 @@ ALTER TABLE `Users`
   ADD CONSTRAINT `Users_ibfk_1` FOREIGN KEY (`InstituteID`) REFERENCES `Institute` (`InstituteID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 COMMIT;
 
+-- -------------------
+-- Create Log Table --
+-- -------------------
+
+Drop table if EXISTS user_action_log;
+CREATE TABLE IF NOT EXISTS user_action_log (
+    LogID INT AUTO_INCREMENT PRIMARY KEY,
+    ActionType VARCHAR(50) NOT NULL,
+    TableName VARCHAR(100) NULL,
+    Query TEXT NULL,
+    ActionTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PerformedBy VARCHAR(100) NULL
+) ENGINE=InnoDB;
+
+DROP TRIGGER IF EXISTS before_insert_user_action_log;
+CREATE TRIGGER before_insert_user_action_log
+BEFORE INSERT ON user_action_log
+FOR EACH ROW
+BEGIN
+    IF NEW.PerformedBy IS NULL OR NEW.PerformedBy = '' THEN
+        SET NEW.PerformedBy = CURRENT_USER();
+    END IF;
+END;
+
 -- ------------------------------
 -- Add Doctor Stored Procedure --
 -- ------------------------------
@@ -702,19 +726,36 @@ CREATE PROCEDURE DeleteDoctor(
     IN p_UserID INT
 )
 BEGIN
-    SET @sql = CONCAT('DELETE FROM users WHERE UserID = ? AND UserType = ''doctor''');
+    DECLARE v_Username VARCHAR(100);
+
+    -- Get the doctor's username (only if the user is a doctor)
+    SELECT Username INTO v_Username 
+    FROM users
+    WHERE UserID = p_UserID AND UserType = 'doctor';
+
+    -- Delete user only if it exists and is a doctor
+    SET @sql = 'DELETE FROM users WHERE UserID = ? AND UserType = ''doctor''';
     PREPARE stmt FROM @sql;
     SET @userId = p_UserID;
     EXECUTE stmt USING @userId;
     DEALLOCATE PREPARE stmt;
 
+    -- Drop the MySQL login if the username exists
+    IF v_Username IS NOT NULL THEN
+        SET @drop_sql = CONCAT('DROP USER IF EXISTS `', REPLACE(v_Username,'`','``'), '`@''localhost'';');
+        PREPARE stmt2 FROM @drop_sql;
+        EXECUTE stmt2;
+        DEALLOCATE PREPARE stmt2;
+    END IF;
+
+    -- Log the action
     INSERT INTO user_action_log (ActionType, TableName, Query)
     VALUES (
         'DROP',
         'users',
         CONCAT('CALL DeleteDoctor(', p_UserID, ');')
     );
-END; 
+END;
 
 -- -------------------------------
 -- Edit Doctor Stored Procedure --

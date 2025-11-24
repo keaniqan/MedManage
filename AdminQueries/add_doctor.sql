@@ -85,4 +85,4 @@ BEGIN
     );
 END;
 
-
+CALL AddDoctor('doc7','dr.smith@example.com','John','Smith','0987654321','doc7','IC7654321','M',1,'Cardiology','ML123456',10,'Harvard Medical School','Board Certified','["English", "Malay"]');
