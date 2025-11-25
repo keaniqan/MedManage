@@ -7,11 +7,13 @@ except ModuleNotFoundError as e:
         "pip uninstall -y mysql mysql-connector\n"
         "pip install -U mysql-connector-python"
     )
+import os
 import json
 import hashlib
 import random
 from turtle import title
 from faker import Faker
+from dotenv import load_dotenv
 
 def _print_mysql_connector_info():
     try:
@@ -541,12 +543,13 @@ class UserInserter:
 # =========================
 if __name__ == "__main__":
     # IMPORTANT: First create the tables by running cos10082_database.sql in MySQL Workbench
+    load_dotenv()  # Load environment variables from .env file if present
     inserter = UserInserter(
-        host='localhost',
-        port=3307,  
-        database='medmanagedb',
-        user='root',
-        password='root'
+        host= os.getenv('hostname', 'localhost'),
+        port= os.getenv('port', 3307),
+        database= os.getenv('database', 'medmanagedb'),
+        user= os.getenv('user', 'root'),
+        password= os.getenv('password', 'root')
     )
 
     if inserter.connect():
