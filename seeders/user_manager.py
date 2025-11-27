@@ -557,8 +557,8 @@ if __name__ == "__main__":
         inserter.initialize_institutes()
         
         # Generate doctors with patients (now using stored procedure)
-        num_doctors = 20  
-        patients_per_doctor = 10
+        num_doctors = 100
+        patients_per_doctor = 20
         
         inserter.insert_doctors_with_patients(
             num_doctors=num_doctors,
