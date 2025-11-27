@@ -29,7 +29,7 @@ BEGIN
     END IF;
 
     -- Log the action
-    INSERT INTO user_action_log (ActionType, TableName, Query)
+    INSERT INTO log (ActionType, TableName, Query)
     VALUES (
         'DROP',
         'users',

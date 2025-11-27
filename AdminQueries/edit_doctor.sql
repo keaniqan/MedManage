@@ -15,7 +15,7 @@ BEGIN
     EXECUTE stmt USING @newValue, @userId;
     DEALLOCATE PREPARE stmt;
 
-    INSERT INTO user_action_log (ActionType, TableName, Query)
+    INSERT INTO log (ActionType, TableName, Query)
     VALUES (
         'UPDATE',
         'users',

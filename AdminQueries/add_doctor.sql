@@ -74,7 +74,7 @@ BEGIN
 
     FLUSH PRIVILEGES;
 
-    INSERT INTO user_action_log (ActionType, TableName, Query)
+    INSERT INTO log (ActionType, TableName, Query)
     VALUES (
         'INSERT',
         'users',
