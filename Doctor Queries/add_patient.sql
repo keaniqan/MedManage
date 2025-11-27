@@ -144,7 +144,7 @@ BEGIN
 
     FLUSH PRIVILEGES;
 
-    INSERT INTO user_action_log (ActionType, TableName, Query)
+    INSERT INTO log (ActionType, TableName, Query)
     VALUES (
         'INSERT',
         'users',
@@ -160,3 +160,5 @@ BEGIN
 END//
 
 DELIMITER ;
+
+CALL AddPatient( 'Onyakapom', 'OnyaEst@gmail.com', 'Onyakapom', 'Esther', '+609586543326', '12345', 'ID42069', 'M', 1, 'O', '+', '+609545667326',  '2000-06-09');
