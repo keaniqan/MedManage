@@ -78,6 +78,12 @@ class UserInserter:
         if not self.connection or not self.connection.is_connected():
             print("No database connection")
             return False
+        
+        # If user is a patient, use AddPatient stored procedure
+        if user_type == 'patient':
+            print(f"⚠ Warning: insert_single_user called for patient. Use insert_patient_with_procedure instead.")
+            return False
+        
         try:
             cursor = self.connection.cursor()
             password_hash = self.hash_password(password)
@@ -99,28 +105,58 @@ class UserInserter:
             return False
 
     # -------------------------
-    # Insert Patient Details
+    # Insert Patient Using Stored Procedure
     # -------------------------
-    def insert_patient_details(self, user_id, abo_blood_type, rh_blood_type, emergency_contact, dob):
-        """Insert patient details"""
+    def insert_patient_with_procedure(self, username, email, first_name, last_name,
+                                     phone, password, identification, gender, institute_id,
+                                     abo_blood_type, rh_blood_type, emergency_contact, dob):
+        """Insert a patient using the AddPatient stored procedure"""
         if not self.connection or not self.connection.is_connected():
             print("No database connection")
             return False
         try:
             cursor = self.connection.cursor()
-            query = """
-            INSERT INTO patientdetails (UserID, ABOBloodType, RhBloodType, EmergencyContact, DOB)
-            VALUES (%s, %s, %s, %s, %s)
-            """
-            values = (user_id, abo_blood_type, rh_blood_type, emergency_contact, dob)
-            cursor.execute(query, values)
+            
+            # Call the stored procedure
+            cursor.callproc('AddPatient', [
+                username,
+                email,
+                first_name,
+                last_name,
+                phone,
+                password,  # Plain password - procedure will hash it
+                identification,
+                gender,
+                institute_id,
+                abo_blood_type,
+                rh_blood_type,
+                emergency_contact,
+                dob
+            ])
+            
+            # Fetch the result
+            for result in cursor.stored_results():
+                row = result.fetchone()
+                user_id = row[0] if row else None
+            
             self.connection.commit()
-            patient_details_id = cursor.lastrowid
+            
+            # Get the PatientDetailsID
+            if user_id:
+                cursor.execute("SELECT PatientDetailsID FROM patientdetails WHERE UserID = %s", (user_id,))
+                result = cursor.fetchone()
+                patient_details_id = result[0] if result else None
+            else:
+                patient_details_id = None
+            
             cursor.close()
-            return patient_details_id
+            
+            print(f"✓ Created Patient via Stored Procedure: {first_name} {last_name}")
+            return user_id, patient_details_id
+            
         except Error as e:
-            print(f"✗ Error inserting patient details: {e}")
-            return False
+            print(f"✗ Error calling AddPatient procedure for '{username}': {e}")
+            return False, False
 
     # -------------------------
     # Insert Doctor Using Stored Procedure
@@ -376,42 +412,37 @@ class UserInserter:
                     patient_id = f"IC{random.randint(100000,699999)}"
                     patient_gender = random.choice(['M','F'])
                     
-                    patient_user_id = self.insert_single_user(
-                        username=patient_username,
-                        email=patient_email,
-                        user_type='patient',
-                        first_name=patient_first,
-                        last_name=patient_last,
-                        phone=patient_phone,
-                        password='patient123',
-                        identification=patient_id,
-                        gender=patient_gender,
-                        institute_id=institute_id
-                    )
-                    
-                    if not patient_user_id:
-                        continue
-                    
                     # Create patient details
                     blood_abo = random.choice(['A', 'B', 'AB', 'O'])
                     blood_rh = random.choice(['+', '-'])
                     emergency = f"+60{random.choice(['11','12','13','16','17'])}{random.randint(1000000,9999999)}"
                     dob = fake.date_of_birth(minimum_age=18, maximum_age=85)
                     
-                    patient_details_id = self.insert_patient_details(
-                        user_id=patient_user_id,
+                    # Use stored procedure to create patient
+                    patient_user_id, patient_details_id = self.insert_patient_with_procedure(
+                        username=patient_username,
+                        email=patient_email,
+                        first_name=patient_first,
+                        last_name=patient_last,
+                        phone=patient_phone,
+                        password='patient123',
+                        identification=patient_id,
+                        gender=patient_gender,
+                        institute_id=institute_id,
                         abo_blood_type=blood_abo,
                         rh_blood_type=blood_rh,
                         emergency_contact=emergency,
                         dob=dob
                     )
                     
-                    if patient_details_id:
-                        # Link patient to doctor (first patient is primary)
-                        is_primary = (j == 0)
-                        self.link_doctor_patient(patient_details_id, doctor_details_id, is_primary)
-                        success_patients += 1
-                        print(f"    → Assigned Patient: {patient_first} {patient_last} {'(Primary)' if is_primary else ''}")
+                    if not patient_user_id or not patient_details_id:
+                        continue
+                    
+                    # Link patient to doctor (first patient is primary)
+                    is_primary = (j == 0)
+                    self.link_doctor_patient(patient_details_id, doctor_details_id, is_primary)
+                    success_patients += 1
+                    print(f"    → Assigned Patient: {patient_first} {patient_last} {'(Primary)' if is_primary else ''}")
         
         print(f"\n=== Generation Summary ===")
         print(f"Doctors Created: {success_doctors}/{num_doctors}")
@@ -534,20 +565,22 @@ class UserInserter:
     # Insert Medicine
     # -------------------------
     def insert_medicine(self, name, brand, description):
-        """Insert a medicine into the database"""
+        """Insert a medicine using the AddMedicine stored procedure"""
         if not self.connection or not self.connection.is_connected():
             print("No database connection")
             return False
         try:
             cursor = self.connection.cursor()
-            query = """
-            INSERT INTO medicine (Name, Brand, Description)
-            VALUES (%s, %s, %s)
-            """
-            values = (name, brand, description)
-            cursor.execute(query, values)
+            
+            # Call the stored procedure
+            cursor.callproc('AddMedicine', [name, brand, description])
+            
+            # Fetch the result (LAST_INSERT_ID)
+            for result in cursor.stored_results():
+                row = result.fetchone()
+                medicine_id = row[0] if row else None
+            
             self.connection.commit()
-            medicine_id = cursor.lastrowid
             cursor.close()
             return medicine_id
         except Error as e:
