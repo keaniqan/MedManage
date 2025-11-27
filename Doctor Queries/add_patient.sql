@@ -160,5 +160,3 @@ BEGIN
 END//
 
 DELIMITER ;
-
-CALL AddPatient( 'Onyakapom', 'OnyaEst@gmail.com', 'Onyakapom', 'Esther', '+609586543326', '12345', 'ID42069', 'M', 1, 'O', '+', '+609545667326',  '2000-06-09');
