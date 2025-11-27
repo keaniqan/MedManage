@@ -27,3 +27,4 @@ ORDER BY
     dp.IsPrimaryDoctor DESC, 
     u.LastName, 
     u.FirstName;
+
