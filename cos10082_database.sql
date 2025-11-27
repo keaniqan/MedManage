@@ -617,7 +617,7 @@ COMMIT;
 
 DROP TRIGGER IF EXISTS before_insert_user_action_log;
 CREATE TRIGGER before_insert_user_action_log
-BEFORE INSERT ON user_action_log
+BEFORE INSERT ON log
 FOR EACH ROW
 BEGIN
     IF NEW.PerformedBy IS NULL OR NEW.PerformedBy = '' THEN
