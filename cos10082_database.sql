@@ -605,15 +605,15 @@ COMMIT;
 -- Create Log Table --
 -- -------------------
 
-Drop table if EXISTS user_action_log;
-CREATE TABLE IF NOT EXISTS user_action_log (
-    LogID INT AUTO_INCREMENT PRIMARY KEY,
-    ActionType VARCHAR(50) NOT NULL,
-    TableName VARCHAR(100) NULL,
-    Query TEXT NULL,
-    ActionTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PerformedBy VARCHAR(100) NULL
-) ENGINE=InnoDB;
+-- Drop table if EXISTS user_action_log;
+-- CREATE TABLE IF NOT EXISTS user_action_log (
+--     LogID INT AUTO_INCREMENT PRIMARY KEY,
+--     ActionType VARCHAR(50) NOT NULL,
+--     TableName VARCHAR(100) NULL,
+--     Query TEXT NULL,
+--     ActionTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     PerformedBy VARCHAR(100) NULL
+-- ) ENGINE=InnoDB;
 
 DROP TRIGGER IF EXISTS before_insert_user_action_log;
 CREATE TRIGGER before_insert_user_action_log
@@ -705,7 +705,7 @@ BEGIN
 
     FLUSH PRIVILEGES;
 
-    INSERT INTO user_action_log (ActionType, TableName, Query)
+    INSERT INTO log (ActionType, TableName, Query)
     VALUES (
         'INSERT',
         'users',
@@ -749,7 +749,7 @@ BEGIN
     END IF;
 
     -- Log the action
-    INSERT INTO user_action_log (ActionType, TableName, Query)
+    INSERT INTO log (ActionType, TableName, Query)
     VALUES (
         'DROP',
         'users',
@@ -776,7 +776,7 @@ BEGIN
     EXECUTE stmt USING @newValue, @userId;
     DEALLOCATE PREPARE stmt;
 
-    INSERT INTO user_action_log (ActionType, TableName, Query)
+    INSERT INTO log (ActionType, TableName, Query)
     VALUES (
         'UPDATE',
         'users',
