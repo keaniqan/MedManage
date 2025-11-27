@@ -13,7 +13,7 @@ BEGIN
     VALUES (p_Name, p_Brand, p_Description);
     
     -- Log the action
-    INSERT INTO user_action_log (ActionType, TableName, Query)
+    INSERT INTO log (ActionType, TableName, Query)
     VALUES (
         'INSERT',
         'Medicine',
