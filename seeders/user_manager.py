@@ -14,6 +14,7 @@ import random
 from turtle import title
 from faker import Faker
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 def _print_mysql_connector_info():
     try:
@@ -530,13 +531,545 @@ class UserInserter:
             return False
 
     # -------------------------
-    # Close Connection
+    # Insert Medicine
     # -------------------------
-    def close(self):
-        if self.connection and self.connection.is_connected():
-            self.connection.close()
-            print("Database connection closed")
+    def insert_medicine(self, name, brand, description):
+        """Insert a medicine into the database"""
+        if not self.connection or not self.connection.is_connected():
+            print("No database connection")
+            return False
+        try:
+            cursor = self.connection.cursor()
+            query = """
+            INSERT INTO medicine (Name, Brand, Description)
+            VALUES (%s, %s, %s)
+            """
+            values = (name, brand, description)
+            cursor.execute(query, values)
+            self.connection.commit()
+            medicine_id = cursor.lastrowid
+            cursor.close()
+            return medicine_id
+        except Error as e:
+            print(f"✗ Error inserting medicine '{name}': {e}")
+            return False
 
+    def initialize_medicines(self):
+        """Insert common medicines into the database"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT COUNT(*) FROM medicine")
+        count = cursor.fetchone()[0]
+        cursor.close()
+        
+        if count > 0:
+            print("✓ Medicines already exist in database")
+            return True
+        
+        medicines = [
+            ('Paracetamol', 'Panadol', 'Pain reliever and fever reducer'),
+            ('Ibuprofen', 'Advil', 'Anti-inflammatory and pain reliever'),
+            ('Amoxicillin', 'Amoxil', 'Antibiotic for bacterial infections'),
+            ('Metformin', 'Glucophage', 'Diabetes medication'),
+            ('Lisinopril', 'Prinivil', 'Blood pressure medication'),
+            ('Amlodipine', 'Norvasc', 'Calcium channel blocker for hypertension'),
+            ('Simvastatin', 'Zocor', 'Cholesterol-lowering medication'),
+            ('Omeprazole', 'Prilosec', 'Proton pump inhibitor for acid reflux'),
+            ('Levothyroxine', 'Synthroid', 'Thyroid hormone replacement'),
+            ('Albuterol', 'Ventolin', 'Bronchodilator for asthma'),
+            ('Aspirin', 'Bayer', 'Blood thinner and pain reliever'),
+            ('Atorvastatin', 'Lipitor', 'Statin for cholesterol management'),
+            ('Losartan', 'Cozaar', 'Angiotensin receptor blocker'),
+            ('Cetirizine', 'Zyrtec', 'Antihistamine for allergies'),
+            ('Ranitidine', 'Zantac', 'H2 blocker for heartburn')
+        ]
+        
+        for med in medicines:
+            self.insert_medicine(*med)
+        
+        print(f"✓ Successfully inserted {len(medicines)} medicines")
+        return True
+
+    # -------------------------
+    # Insert Disease
+    # -------------------------
+    def insert_disease(self, name, description):
+        """Insert a disease into the database"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        try:
+            cursor = self.connection.cursor()
+            query = "INSERT INTO disease (Name, Description) VALUES (%s, %s)"
+            cursor.execute(query, (name, description))
+            self.connection.commit()
+            disease_id = cursor.lastrowid
+            cursor.close()
+            return disease_id
+        except Error as e:
+            print(f"✗ Error inserting disease '{name}': {e}")
+            return False
+
+    def initialize_diseases(self):
+        """Insert common diseases into the database"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT COUNT(*) FROM disease")
+        count = cursor.fetchone()[0]
+        cursor.close()
+        
+        if count > 0:
+            print("✓ Diseases already exist in database")
+            return True
+        
+        diseases = [
+            ('Hypertension', 'High blood pressure condition'),
+            ('Type 2 Diabetes', 'Metabolic disorder affecting blood sugar'),
+            ('Asthma', 'Chronic respiratory condition'),
+            ('Coronary Artery Disease', 'Heart disease due to plaque buildup'),
+            ('Hyperlipidemia', 'High cholesterol levels'),
+            ('GERD', 'Gastroesophageal reflux disease'),
+            ('Hypothyroidism', 'Underactive thyroid gland'),
+            ('Osteoarthritis', 'Degenerative joint disease'),
+            ('Depression', 'Mental health disorder'),
+            ('Anxiety Disorder', 'Excessive worry and fear')
+        ]
+        
+        for disease in diseases:
+            self.insert_disease(*disease)
+        
+        print(f"✓ Successfully inserted {len(diseases)} diseases")
+        return True
+
+    # -------------------------
+    # Insert Side Effect
+    # -------------------------
+    def insert_side_effect(self, name, description):
+        """Insert a side effect into the database"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        try:
+            cursor = self.connection.cursor()
+            query = "INSERT INTO sideeffect (Name, Description) VALUES (%s, %s)"
+            cursor.execute(query, (name, description))
+            self.connection.commit()
+            side_effect_id = cursor.lastrowid
+            cursor.close()
+            return side_effect_id
+        except Error as e:
+            print(f"✗ Error inserting side effect '{name}': {e}")
+            return False
+
+    def initialize_side_effects(self):
+        """Insert common side effects"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT COUNT(*) FROM sideeffect")
+        count = cursor.fetchone()[0]
+        cursor.close()
+        
+        if count > 0:
+            print("✓ Side effects already exist in database")
+            return True
+        
+        side_effects = [
+            ('Nausea', 'Feeling of sickness with urge to vomit'),
+            ('Dizziness', 'Feeling of lightheadedness or unsteadiness'),
+            ('Headache', 'Pain in the head region'),
+            ('Drowsiness', 'Feeling of sleepiness'),
+            ('Dry mouth', 'Reduced saliva production'),
+            ('Constipation', 'Difficulty in bowel movements'),
+            ('Diarrhea', 'Loose or watery stools'),
+            ('Fatigue', 'Extreme tiredness'),
+            ('Insomnia', 'Difficulty sleeping'),
+            ('Rash', 'Skin irritation or eruption')
+        ]
+        
+        for effect in side_effects:
+            self.insert_side_effect(*effect)
+        
+        print(f"✓ Successfully inserted {len(side_effects)} side effects")
+        return True
+
+    # -------------------------
+    # Insert Symptom
+    # -------------------------
+    def insert_symptom(self, name, description):
+        """Insert a symptom into the database"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        try:
+            cursor = self.connection.cursor()
+            query = "INSERT INTO symptom (Name, Description) VALUES (%s, %s)"
+            cursor.execute(query, (name, description))
+            self.connection.commit()
+            symptom_id = cursor.lastrowid
+            cursor.close()
+            return symptom_id
+        except Error as e:
+            print(f"✗ Error inserting symptom '{name}': {e}")
+            return False
+
+    def initialize_symptoms(self):
+        """Insert common symptoms"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT COUNT(*) FROM symptom")
+        count = cursor.fetchone()[0]
+        cursor.close()
+        
+        if count > 0:
+            print("✓ Symptoms already exist in database")
+            return True
+        
+        symptoms = [
+            ('Fever', 'Elevated body temperature'),
+            ('Cough', 'Sudden expulsion of air from lungs'),
+            ('Chest Pain', 'Discomfort in chest area'),
+            ('Shortness of Breath', 'Difficulty breathing'),
+            ('Fatigue', 'Extreme tiredness'),
+            ('Joint Pain', 'Pain in joints'),
+            ('Abdominal Pain', 'Pain in stomach area'),
+            ('Headache', 'Pain in head'),
+            ('Dizziness', 'Feeling unsteady'),
+            ('Nausea', 'Feeling sick')
+        ]
+        
+        for symptom in symptoms:
+            self.insert_symptom(*symptom)
+        
+        print(f"✓ Successfully inserted {len(symptoms)} symptoms")
+        return True
+
+    # -------------------------
+    # Link Disease to Patient
+    # -------------------------
+    def link_disease_to_patient(self, patient_details_id, disease_id, onset_days_ago=30):
+        """Link a disease to a patient"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        try:
+            cursor = self.connection.cursor()
+            
+            # Check if link already exists
+            cursor.execute("""
+                SELECT COUNT(*) FROM disease_patientdetails 
+                WHERE DiseaseID = %s AND PatientDetailsID = %s
+            """, (disease_id, patient_details_id))
+            
+            if cursor.fetchone()[0] > 0:
+                cursor.close()
+                return False  # Already exists, skip
+            
+            onset = datetime.now() - timedelta(days=onset_days_ago)
+            query = """
+            INSERT INTO disease_patientdetails (DiseaseID, PatientDetailsID, Onset)
+            VALUES (%s, %s, %s)
+            """
+            cursor.execute(query, (disease_id, patient_details_id, onset))
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Error as e:
+            if e.errno == 1062:  # Duplicate entry error
+                return False  # Silently skip duplicates
+            print(f"✗ Error linking disease to patient: {e}")
+            return False
+
+    # -------------------------
+    # Link Symptom to Patient
+    # -------------------------
+    def link_symptom_to_patient(self, patient_details_id, symptom_id, onset_days_ago=7):
+        """Link a symptom to a patient"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        try:
+            cursor = self.connection.cursor()
+            
+            # Check if link already exists
+            cursor.execute("""
+                SELECT COUNT(*) FROM symptom_patientdetails 
+                WHERE SymptomID = %s AND PatientDetailsID = %s
+            """, (symptom_id, patient_details_id))
+            
+            if cursor.fetchone()[0] > 0:
+                cursor.close()
+                return False  # Already exists, skip
+            
+            onset = datetime.now() - timedelta(days=onset_days_ago)
+            query = """
+            INSERT INTO symptom_patientdetails (SymptomID, PatientDetailsID, Onset)
+            VALUES (%s, %s, %s)
+            """
+            cursor.execute(query, (symptom_id, patient_details_id, onset))
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Error as e:
+            if e.errno == 1062:  # Duplicate entry error
+                return False  # Silently skip duplicates
+            print(f"✗ Error linking symptom to patient: {e}")
+            return False
+
+    # -------------------------
+    # Create Prescription
+    # -------------------------
+    def create_prescription(self, patient_user_id, doctor_user_id, medicine_id, total_dose, remark):
+        """Create a prescription"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        try:
+            cursor = self.connection.cursor()
+            query = """
+            INSERT INTO prescription (PatientUserID, DoctorUserID, MedicineID, TotalDose, Remark)
+            VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (patient_user_id, doctor_user_id, medicine_id, total_dose, remark))
+            self.connection.commit()
+            prescription_id = cursor.lastrowid
+            cursor.close()
+            return prescription_id
+        except Error as e:
+            print(f"✗ Error creating prescription: {e}")
+            return False
+
+    # -------------------------
+    # Create Prescription Detail
+    # -------------------------
+    def create_prescription_detail(self, prescription_id, dose, interval_minutes, remark, days_duration=7):
+        """Create prescription detail"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        try:
+            cursor = self.connection.cursor()
+            start_on = datetime.now()
+            end_on = start_on + timedelta(days=days_duration)
+            query = """
+            INSERT INTO prescriptiondetail 
+            (PrescriptionID, IsTakeOnEffect, StartOn, EndOn, Dose, IntervalMinutes, Remark)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (prescription_id, 0, start_on, end_on, dose, interval_minutes, remark))
+            self.connection.commit()
+            detail_id = cursor.lastrowid
+            cursor.close()
+            return detail_id
+        except Error as e:
+            print(f"✗ Error creating prescription detail: {e}")
+            return False
+
+    # -------------------------
+    # Create Appointment
+    # -------------------------
+    def create_appointment(self, patient_user_id, doctor_user_id, days_ahead=7, details="Regular checkup"):
+        """Create an appointment"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        try:
+            cursor = self.connection.cursor()
+            appointment_time = datetime.now() + timedelta(days=days_ahead)
+            query = """
+            INSERT INTO appointment 
+            (PatientUserID, DoctorUserID, AppointmentOn, Details, IsDoctorAccept, IsPatientAccept)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            is_accepted = random.choice([0, 1])
+            cursor.execute(query, (patient_user_id, doctor_user_id, appointment_time, 
+                                 details, is_accepted, is_accepted))
+            self.connection.commit()
+            appointment_id = cursor.lastrowid
+            cursor.close()
+            return appointment_id
+        except Error as e:
+            print(f"✗ Error creating appointment: {e}")
+            return False
+
+    # -------------------------
+    # Create Reminder for Prescription
+    # -------------------------
+    def create_reminder_for_prescription(self, prescription_detail_id, interval_minutes):
+        """Create reminder for prescription detail"""
+        if not self.connection or not self.connection.is_connected():
+            return False
+        try:
+            cursor = self.connection.cursor()
+            start_on = datetime.now()
+            end_on = start_on + timedelta(days=7)
+            query = """
+            INSERT INTO reminder 
+            (StartOn, EndOn, IntervalMinutes, PrescriptionDetailID)
+            VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(query, (start_on, end_on, interval_minutes, prescription_detail_id))
+            self.connection.commit()
+            reminder_id = cursor.lastrowid
+            cursor.close()
+            return reminder_id
+        except Error as e:
+            print(f"✗ Error creating reminder: {e}")
+            return False
+
+    # -------------------------
+    # Populate All Data
+    # -------------------------
+    def populate_all_data(self, num_doctors=10, patients_per_doctor=20):
+        """Populate all tables with related data"""
+        fake = Faker()
+        
+        print("\n" + "="*60)
+        print("STARTING COMPLETE DATABASE POPULATION")
+        print("="*60)
+        
+        # Initialize base data
+        print("\n[1/8] Initializing institutes...")
+        self.initialize_institutes()
+        
+        print("\n[2/8] Initializing medicines...")
+        self.initialize_medicines()
+        
+        print("\n[3/8] Initializing diseases...")
+        self.initialize_diseases()
+        
+        print("\n[4/8] Initializing side effects...")
+        self.initialize_side_effects()
+        
+        print("\n[5/8] Initializing symptoms...")
+        self.initialize_symptoms()
+        
+        # Get IDs for reference
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT MedicineId FROM medicine")
+        medicine_ids = [row[0] for row in cursor.fetchall()]
+        
+        cursor.execute("SELECT DiseaseID FROM disease")
+        disease_ids = [row[0] for row in cursor.fetchall()]
+        
+        cursor.execute("SELECT SymptomID FROM symptom")
+        symptom_ids = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        
+        print(f"\n[6/8] Creating {num_doctors} doctors with {patients_per_doctor} patients each...")
+        self.insert_doctors_with_patients(num_doctors, patients_per_doctor)
+        
+        # Get all patients and doctors
+        cursor = self.connection.cursor()
+        cursor.execute("""
+            SELECT pd.PatientDetailsID, pd.UserID 
+            FROM patientdetails pd
+        """)
+        patients = cursor.fetchall()
+        
+        cursor.execute("""
+            SELECT dd.DoctorDetailsID, dd.UserID 
+            FROM doctordetails dd
+        """)
+        doctors = cursor.fetchall()
+        cursor.close()
+        
+        print(f"\n[7/8] Adding diseases, symptoms, and prescriptions to patients...")
+        prescription_count = 0
+        appointment_count = 0
+        disease_count = 0
+        symptom_count = 0
+        
+        for patient_details_id, patient_user_id in patients:
+            # Assign 1-3 random diseases (use set to avoid duplicates)
+            num_diseases = random.randint(1, 3)
+            selected_diseases = random.sample(disease_ids, min(num_diseases, len(disease_ids)))
+            for disease_id in selected_diseases:
+                if self.link_disease_to_patient(patient_details_id, disease_id, 
+                                            onset_days_ago=random.randint(30, 365)):
+                    disease_count += 1
+            
+            # Assign 1-5 symptoms (use set to avoid duplicates)
+            num_symptoms = random.randint(1, 5)
+            selected_symptoms = random.sample(symptom_ids, min(num_symptoms, len(symptom_ids)))
+            for symptom_id in selected_symptoms:
+                if self.link_symptom_to_patient(patient_details_id, symptom_id,
+                                            onset_days_ago=random.randint(1, 30)):
+                    symptom_count += 1
+            
+            # Get patient's doctor
+            cursor = self.connection.cursor()
+            cursor.execute("""
+                SELECT dd.UserID 
+                FROM doctor_patient dp
+                JOIN doctordetails dd ON dp.DoctorDetailsID = dd.DoctorDetailsID
+                WHERE dp.PatientDetailsID = %s AND dp.IsPrimaryDoctor = 1
+                LIMIT 1
+            """, (patient_details_id,))
+            result = cursor.fetchone()
+            cursor.close()
+            
+            if result:
+                doctor_user_id = result[0]
+                
+                # Create 1-3 prescriptions
+                num_prescriptions = random.randint(1, 3)
+                for _ in range(num_prescriptions):
+                    medicine_id = random.choice(medicine_ids)
+                    total_dose = f"{random.randint(7, 30)} tablets"
+                    remark = random.choice([
+                        "Take after meals",
+                        "Take before bedtime",
+                        "Take with water",
+                        "Complete full course"
+                    ])
+                    
+                    prescription_id = self.create_prescription(
+                        patient_user_id, doctor_user_id, medicine_id, total_dose, remark
+                    )
+                    
+                    if prescription_id:
+                        prescription_count += 1
+                        # Create prescription detail
+                        dose = f"{random.choice(['1', '2'])} tablet(s)"
+                        interval = random.choice([480, 720, 1440])  # 8h, 12h, 24h
+                        detail_remark = "As prescribed"
+                        
+                        detail_id = self.create_prescription_detail(
+                            prescription_id, dose, interval, detail_remark, days_duration=random.randint(7, 30)
+                        )
+                        
+                        if detail_id:
+                            # Create reminder
+                            self.create_reminder_for_prescription(detail_id, interval)
+                
+                # Create 0-2 appointments
+                num_appointments = random.randint(0, 2)
+                for _ in range(num_appointments):
+                    details = random.choice([
+                        "Regular checkup",
+                        "Follow-up consultation",
+                        "Lab results review",
+                        "Medication review"
+                    ])
+                    appointment_id = self.create_appointment(
+                        patient_user_id, doctor_user_id,
+                        days_ahead=random.randint(1, 60),
+                        details=details
+                    )
+                    if appointment_id:
+                        appointment_count += 1
+        
+        print(f"✓ Linked {disease_count} diseases to patients")
+        print(f"✓ Linked {symptom_count} symptoms to patients")
+        print(f"✓ Created {prescription_count} prescriptions")
+        print(f"✓ Created {appointment_count} appointments")
+        
+        print("\n[8/8] Generating final statistics...")
+        self.print_statistics()
+        
+        print("\n" + "="*60)
+        print("DATABASE POPULATION COMPLETE!")
+        print("="*60)
 
 # =========================
 # Main Execution
@@ -553,20 +1086,11 @@ if __name__ == "__main__":
     )
 
     if inserter.connect():
-        # Initialize 5 hardcoded institutes
-        inserter.initialize_institutes()
-        
-        # Generate doctors with patients (now using stored procedure)
-        num_doctors = 100
-        patients_per_doctor = 20
-        
-        inserter.insert_doctors_with_patients(
-            num_doctors=num_doctors,
-            patients_per_doctor=patients_per_doctor
+        # Populate all tables with comprehensive data
+        inserter.populate_all_data(
+            num_doctors=10,
+            patients_per_doctor=20
         )
-        
-        # Print statistics
-        inserter.print_statistics()
         
         # Close connection
         inserter.close()

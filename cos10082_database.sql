@@ -133,13 +133,13 @@ CREATE TABLE `Institute` (
 
 DROP TABLE IF EXISTS `Log`;
 CREATE TABLE `Log` (
-  `LogID` int NOT NULL,
-  `ActionType` enum('insert','update','delete') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `TableName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `Query` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `CreatedOn` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `PerformedBy` timestamp NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    LogID INT,
+    ActionType VARCHAR(50) NOT NULL,
+    TableName VARCHAR(100) NULL,
+    Query TEXT NULL,
+    ActionTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PerformedBy VARCHAR(100) NULL
+) ENGINE=InnoDB;
 
 -- --------------------------------------------------------
 
