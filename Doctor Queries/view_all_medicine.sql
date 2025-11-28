@@ -1,8 +1,8 @@
 USE medmanagedb;
 SELECT
-	m.MedicineID,
+	m.MedicineId,
     m.Name,
     m.Brand,
     m.Description
 FROM Medicine m
-ORDER by m.MedicineID DESC;
+ORDER by m.MedicineId DESC;
