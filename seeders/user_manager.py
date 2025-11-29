@@ -151,7 +151,7 @@ class UserInserter:
             
             cursor.close()
             
-            print(f"✓ Created Patient via Stored Procedure: {first_name} {last_name}")
+            #print(f"✓ Created Patient via Stored Procedure: {first_name} {last_name}")
             return user_id, patient_details_id
             
         except Error as e:
@@ -214,7 +214,7 @@ class UserInserter:
             
             cursor.close()
             
-            print(f"✓ Created Doctor via Stored Procedure: {first_name} {last_name} ({specialist})")
+            #print(f"✓ Created Doctor via Stored Procedure: {first_name} {last_name} ({specialist})")
             return doctor_details_id
             
         except Error as e:
@@ -321,7 +321,7 @@ class UserInserter:
             return False
 
     # -------------------------
-    # Bulk Insert with Relations (UPDATED TO USE STORED PROCEDURE)
+    # Bulk Insert with Relations (OPTIMIZED)
     # -------------------------
     def insert_doctors_with_patients(self, num_doctors, patients_per_doctor=10):
         """Insert doctors using stored procedure and assign patients to them"""
@@ -359,90 +359,103 @@ class UserInserter:
         success_doctors = 0
         success_patients = 0
         
-        for i in range(num_doctors):
-            # Distribute doctors across institutes
-            institute_id = institute_ids[i % len(institute_ids)]
-            
-            # Generate doctor data
-            first_name = fake.first_name()
-            last_name = fake.last_name()
-            username = f"dr_{first_name.lower()}_{last_name.lower()}{random.randint(1,999)}"
-            email = f"{username}@hospital.com"
-            phone = f"+60{random.choice(['11','12','13'])}{random.randint(1000000,9999999)}"
-            identification = f"IC{random.randint(700000,999999)}"
-            gender = random.choice(['M','F'])
-            
-            specialist = random.choice(['Cardiologist', 'Dermatologist', 'Neurologist', 
-                                       'Pediatrician', 'General Practitioner', 'Orthopedic Surgeon'])
-            medical_licence = f"MMC{random.randint(10000,99999)}"
-            years_exp = random.randint(5, 30)
-            school = random.choice(medical_schools)
-            cert = random.choice(certificates)
-            langs = random.choice(languages)
-            
-            # Use stored procedure to create doctor
-            doctor_details_id = self.insert_doctor_with_procedure(
-                username=username,
-                email=email,
-                first_name=first_name,
-                last_name=last_name,
-                phone=phone,
-                password='doctor123',
-                identification=identification,
-                gender=gender,
-                institute_id=institute_id,
-                specialist=specialist,
-                medical_licence_number=medical_licence,
-                years_of_experience=years_exp,
-                medical_school=school,
-                certificates=cert,
-                languages_spoken=langs
-            )
-            
-            if doctor_details_id:
-                success_doctors += 1
+        # Disable autocommit for better performance
+        self.connection.autocommit = False
+        
+        try:
+            for i in range(num_doctors):
+                # Distribute doctors across institutes
+                institute_id = institute_ids[i % len(institute_ids)]
                 
-                # Create patients for this doctor
-                for j in range(patients_per_doctor):
-                    patient_first = fake.first_name()
-                    patient_last = fake.last_name()
-                    patient_username = f"{patient_first.lower()}_{patient_last.lower()}{random.randint(1,9999)}"
-                    patient_email = f"{patient_username}@example.com"
-                    patient_phone = f"+60{random.choice(['16','17','18','19'])}{random.randint(1000000,9999999)}"
-                    patient_id = f"IC{random.randint(100000,699999)}"
-                    patient_gender = random.choice(['M','F'])
+                # Generate doctor data
+                first_name = fake.first_name()
+                last_name = fake.last_name()
+                username = f"dr_{first_name.lower()}_{last_name.lower()}{random.randint(1,999)}"
+                email = f"{username}@hospital.com"
+                phone = f"+60{random.choice(['11','12','13'])}{random.randint(1000000,9999999)}"
+                identification = f"IC{random.randint(700000,999999)}"
+                gender = random.choice(['M','F'])
+                
+                specialist = random.choice(['Cardiologist', 'Dermatologist', 'Neurologist', 
+                                           'Pediatrician', 'General Practitioner', 'Orthopedic Surgeon'])
+                medical_licence = f"MMC{random.randint(10000,99999)}"
+                years_exp = random.randint(5, 30)
+                school = random.choice(medical_schools)
+                cert = random.choice(certificates)
+                langs = random.choice(languages)
+                
+                # Use stored procedure to create doctor
+                doctor_details_id = self.insert_doctor_with_procedure(
+                    username=username,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone=phone,
+                    password='doctor123',
+                    identification=identification,
+                    gender=gender,
+                    institute_id=institute_id,
+                    specialist=specialist,
+                    medical_licence_number=medical_licence,
+                    years_of_experience=years_exp,
+                    medical_school=school,
+                    certificates=cert,
+                    languages_spoken=langs
+                )
+                
+                if doctor_details_id:
+                    success_doctors += 1
                     
-                    # Create patient details
-                    blood_abo = random.choice(['A', 'B', 'AB', 'O'])
-                    blood_rh = random.choice(['+', '-'])
-                    emergency = f"+60{random.choice(['11','12','13','16','17'])}{random.randint(1000000,9999999)}"
-                    dob = fake.date_of_birth(minimum_age=18, maximum_age=85)
+                    # Batch create patients and links
+                    patient_batch = []
+                    for j in range(patients_per_doctor):
+                        patient_first = fake.first_name()
+                        patient_last = fake.last_name()
+                        patient_username = f"{patient_first.lower()}_{patient_last.lower()}{random.randint(1,9999)}"
+                        patient_email = f"{patient_username}@example.com"
+                        patient_phone = f"+60{random.choice(['16','17','18','19'])}{random.randint(1000000,9999999)}"
+                        patient_id = f"IC{random.randint(100000,699999)}"
+                        patient_gender = random.choice(['M','F'])
+                        
+                        blood_abo = random.choice(['A', 'B', 'AB', 'O'])
+                        blood_rh = random.choice(['+', '-'])
+                        emergency = f"+60{random.choice(['11','12','13','16','17'])}{random.randint(1000000,9999999)}"
+                        dob = fake.date_of_birth(minimum_age=18, maximum_age=85)
+                        
+                        patient_batch.append({
+                            'username': patient_username,
+                            'email': patient_email,
+                            'first_name': patient_first,
+                            'last_name': patient_last,
+                            'phone': patient_phone,
+                            'identification': patient_id,
+                            'gender': patient_gender,
+                            'institute_id': institute_id,
+                            'abo_blood_type': blood_abo,
+                            'rh_blood_type': blood_rh,
+                            'emergency_contact': emergency,
+                            'dob': dob
+                        })
                     
-                    # Use stored procedure to create patient
-                    patient_user_id, patient_details_id = self.insert_patient_with_procedure(
-                        username=patient_username,
-                        email=patient_email,
-                        first_name=patient_first,
-                        last_name=patient_last,
-                        phone=patient_phone,
-                        password='patient123',
-                        identification=patient_id,
-                        gender=patient_gender,
-                        institute_id=institute_id,
-                        abo_blood_type=blood_abo,
-                        rh_blood_type=blood_rh,
-                        emergency_contact=emergency,
-                        dob=dob
-                    )
+                    # Process patient batch
+                    for patient_data in patient_batch:
+                        patient_user_id, patient_details_id = self.insert_patient_with_procedure(**patient_data, password='patient123')
+                        
+                        if patient_user_id and patient_details_id:
+                            self.link_doctor_patient(patient_details_id, doctor_details_id, True)
+                            success_patients += 1
                     
-                    if not patient_user_id or not patient_details_id:
-                        continue
-                    
-                    # Link patient to doctor (first patient is primary)
-                    is_primary = (j == 0)
-                    self.link_doctor_patient(patient_details_id, doctor_details_id, is_primary)
-                    success_patients += 1
-                    print(f"    → Assigned Patient: {patient_first} {patient_last} {'(Primary)' if is_primary else ''}")
+                    # Commit every 5 doctors (batch commit)
+                    if (i + 1) % 5 == 0:
+                        self.connection.commit()
+                        print(f"Progress: {i + 1}/{num_doctors} doctors processed")
+            
+            # Final commit
+            self.connection.commit()
+            
+        finally:
+            # Re-enable autocommit
+            self.connection.autocommit = True
         
         print(f"\n=== Generation Summary ===")
         print(f"Doctors Created: {success_doctors}/{num_doctors}")
@@ -782,7 +795,7 @@ class UserInserter:
         return True
 
     # -------------------------
-    # Link Disease to Patient
+    # Link Disease to Patient (OPTIMIZED)
     # -------------------------
     def link_disease_to_patient(self, patient_details_id, disease_id, onset_days_ago=30):
         """Link a disease to a patient"""
@@ -790,34 +803,20 @@ class UserInserter:
             return False
         try:
             cursor = self.connection.cursor()
-            
-            # Check if link already exists
-            cursor.execute("""
-                SELECT COUNT(*) FROM disease_patientdetails 
-                WHERE DiseaseID = %s AND PatientDetailsID = %s
-            """, (disease_id, patient_details_id))
-            
-            if cursor.fetchone()[0] > 0:
-                cursor.close()
-                return False  # Already exists, skip
-            
             onset = datetime.now() - timedelta(days=onset_days_ago)
             query = """
-            INSERT INTO disease_patientdetails (DiseaseID, PatientDetailsID, Onset)
+            INSERT IGNORE INTO disease_patientdetails (DiseaseID, PatientDetailsID, Onset)
             VALUES (%s, %s, %s)
             """
             cursor.execute(query, (disease_id, patient_details_id, onset))
-            self.connection.commit()
             cursor.close()
             return True
         except Error as e:
-            if e.errno == 1062:  # Duplicate entry error
-                return False  # Silently skip duplicates
             print(f"✗ Error linking disease to patient: {e}")
             return False
 
     # -------------------------
-    # Link Symptom to Patient
+    # Link Symptom to Patient (OPTIMIZED)
     # -------------------------
     def link_symptom_to_patient(self, patient_details_id, symptom_id, onset_days_ago=7):
         """Link a symptom to a patient"""
@@ -825,29 +824,15 @@ class UserInserter:
             return False
         try:
             cursor = self.connection.cursor()
-            
-            # Check if link already exists
-            cursor.execute("""
-                SELECT COUNT(*) FROM symptom_patientdetails 
-                WHERE SymptomID = %s AND PatientDetailsID = %s
-            """, (symptom_id, patient_details_id))
-            
-            if cursor.fetchone()[0] > 0:
-                cursor.close()
-                return False  # Already exists, skip
-            
             onset = datetime.now() - timedelta(days=onset_days_ago)
             query = """
-            INSERT INTO symptom_patientdetails (SymptomID, PatientDetailsID, Onset)
+            INSERT IGNORE INTO symptom_patientdetails (SymptomID, PatientDetailsID, Onset)
             VALUES (%s, %s, %s)
             """
             cursor.execute(query, (symptom_id, patient_details_id, onset))
-            self.connection.commit()
             cursor.close()
             return True
         except Error as e:
-            if e.errno == 1062:  # Duplicate entry error
-                return False  # Silently skip duplicates
             print(f"✗ Error linking symptom to patient: {e}")
             return False
 
@@ -860,11 +845,20 @@ class UserInserter:
             return False
         try:
             cursor = self.connection.cursor()
+            
+            # Generate random date between 2015-2025
+            start_date = datetime(2015, 1, 1)
+            end_date = datetime(2025, 12, 31)
+            time_between = end_date - start_date
+            days_between = time_between.days
+            random_days = random.randrange(days_between)
+            prescribed_on = start_date + timedelta(days=random_days)
+            
             query = """
-            INSERT INTO prescription (PatientUserID, DoctorUserID, MedicineID, TotalDose, Remark)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO prescription (PatientUserID, DoctorUserID, MedicineID, TotalDose, Remark, PrescribedOn)
+            VALUES (%s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(query, (patient_user_id, doctor_user_id, medicine_id, total_dose, remark))
+            cursor.execute(query, (patient_user_id, doctor_user_id, medicine_id, total_dose, remark, prescribed_on))
             self.connection.commit()
             prescription_id = cursor.lastrowid
             cursor.close()
@@ -949,10 +943,16 @@ class UserInserter:
             print(f"✗ Error creating reminder: {e}")
             return False
 
+    def close(self):
+        """Close database connection"""
+        if self.connection and self.connection.is_connected():
+            self.connection.close()
+            print("Database connection closed")
+
     # -------------------------
-    # Populate All Data
+    # Populate All Data (OPTIMIZED)
     # -------------------------
-    def populate_all_data(self, num_doctors=10, patients_per_doctor=20):
+    def populate_all_data(self, num_doctors=50, patients_per_doctor=20):
         """Populate all tables with related data"""
         fake = Faker()
         
@@ -991,106 +991,117 @@ class UserInserter:
         print(f"\n[6/8] Creating {num_doctors} doctors with {patients_per_doctor} patients each...")
         self.insert_doctors_with_patients(num_doctors, patients_per_doctor)
         
-        # Get all patients and doctors
+        # Get all patients and doctors in one query
         cursor = self.connection.cursor()
         cursor.execute("""
-            SELECT pd.PatientDetailsID, pd.UserID 
+            SELECT pd.PatientDetailsID, pd.UserID, dd.UserID as DoctorUserID
             FROM patientdetails pd
+            JOIN doctor_patient dp ON pd.PatientDetailsID = dp.PatientDetailsID
+            JOIN doctordetails dd ON dp.DoctorDetailsID = dd.DoctorDetailsID
+            WHERE dp.IsPrimaryDoctor = 1
         """)
-        patients = cursor.fetchall()
-        
-        cursor.execute("""
-            SELECT dd.DoctorDetailsID, dd.UserID 
-            FROM doctordetails dd
-        """)
-        doctors = cursor.fetchall()
+        patients_with_doctors = cursor.fetchall()
         cursor.close()
         
-        print(f"\n[7/8] Adding diseases, symptoms, and prescriptions to patients...")
+        print(f"\n[7/8] Adding diseases, symptoms, prescriptions to {len(patients_with_doctors)} patients...")
+        
+        # Disable autocommit for bulk operations
+        self.connection.autocommit = False
+        
         prescription_count = 0
         appointment_count = 0
         disease_count = 0
         symptom_count = 0
         
-        for patient_details_id, patient_user_id in patients:
-            # Assign 1-3 random diseases (use set to avoid duplicates)
-            num_diseases = random.randint(1, 3)
-            selected_diseases = random.sample(disease_ids, min(num_diseases, len(disease_ids)))
-            for disease_id in selected_diseases:
-                if self.link_disease_to_patient(patient_details_id, disease_id, 
-                                            onset_days_ago=random.randint(30, 365)):
-                    disease_count += 1
-            
-            # Assign 1-5 symptoms (use set to avoid duplicates)
-            num_symptoms = random.randint(1, 5)
-            selected_symptoms = random.sample(symptom_ids, min(num_symptoms, len(symptom_ids)))
-            for symptom_id in selected_symptoms:
-                if self.link_symptom_to_patient(patient_details_id, symptom_id,
-                                            onset_days_ago=random.randint(1, 30)):
-                    symptom_count += 1
-            
-            # Get patient's doctor
+        try:
             cursor = self.connection.cursor()
-            cursor.execute("""
-                SELECT dd.UserID 
-                FROM doctor_patient dp
-                JOIN doctordetails dd ON dp.DoctorDetailsID = dd.DoctorDetailsID
-                WHERE dp.PatientDetailsID = %s AND dp.IsPrimaryDoctor = 1
-                LIMIT 1
-            """, (patient_details_id,))
-            result = cursor.fetchone()
-            cursor.close()
             
-            if result:
-                doctor_user_id = result[0]
+            # Prepare bulk insert statements
+            disease_links = []
+            symptom_links = []
+            
+            for idx, (patient_details_id, patient_user_id, doctor_user_id) in enumerate(patients_with_doctors):
+                # Collect disease links
+                num_diseases = random.randint(1, 3)
+                for disease_id in random.sample(disease_ids, min(num_diseases, len(disease_ids))):
+                    onset = datetime.now() - timedelta(days=random.randint(30, 365))
+                    disease_links.append((disease_id, patient_details_id, onset))
                 
-                # Create 1-3 prescriptions
+                # Collect symptom links
+                num_symptoms = random.randint(1, 5)
+                for symptom_id in random.sample(symptom_ids, min(num_symptoms, len(symptom_ids))):
+                    onset = datetime.now() - timedelta(days=random.randint(1, 30))
+                    symptom_links.append((symptom_id, patient_details_id, onset))
+                
+                # Create prescriptions
                 num_prescriptions = random.randint(1, 3)
                 for _ in range(num_prescriptions):
                     medicine_id = random.choice(medicine_ids)
                     total_dose = f"{random.randint(7, 30)} tablets"
-                    remark = random.choice([
-                        "Take after meals",
-                        "Take before bedtime",
-                        "Take with water",
-                        "Complete full course"
-                    ])
+                    remark = random.choice(["Take after meals", "Take before bedtime", "Take with water", "Complete full course"])
                     
-                    prescription_id = self.create_prescription(
-                        patient_user_id, doctor_user_id, medicine_id, total_dose, remark
-                    )
+                    prescription_id = self.create_prescription(patient_user_id, doctor_user_id, medicine_id, total_dose, remark)
                     
                     if prescription_id:
-                        prescription_count += 1
-                        # Create prescription detail
                         dose = f"{random.choice(['1', '2'])} tablet(s)"
-                        interval = random.choice([480, 720, 1440])  # 8h, 12h, 24h
-                        detail_remark = "As prescribed"
-                        
-                        detail_id = self.create_prescription_detail(
-                            prescription_id, dose, interval, detail_remark, days_duration=random.randint(7, 30)
-                        )
+                        interval = random.choice([480, 720, 1440])
+                        detail_id = self.create_prescription_detail(prescription_id, dose, interval, "As prescribed", days_duration=random.randint(7, 30))
                         
                         if detail_id:
-                            # Create reminder
                             self.create_reminder_for_prescription(detail_id, interval)
+                            prescription_count += 1
                 
-                # Create 0-2 appointments
+                # Create appointments
                 num_appointments = random.randint(0, 2)
                 for _ in range(num_appointments):
-                    details = random.choice([
-                        "Regular checkup",
-                        "Follow-up consultation",
-                        "Lab results review",
-                        "Medication review"
-                    ])
-                    appointment_id = self.create_appointment(
-                        patient_user_id, doctor_user_id,
-                        days_ahead=random.randint(1, 60),
-                        details=details
-                    )
-                    if appointment_id:
+                    details = random.choice(["Regular checkup", "Follow-up consultation", "Lab results review", "Medication review"])
+                    if self.create_appointment(patient_user_id, doctor_user_id, days_ahead=random.randint(1, 60), details=details):
                         appointment_count += 1
+                
+                # Commit every 50 patients
+                if (idx + 1) % 50 == 0:
+                    # Bulk insert disease links
+                    if disease_links:
+                        cursor.executemany("""
+                            INSERT IGNORE INTO disease_patientdetails (DiseaseID, PatientDetailsID, Onset)
+                            VALUES (%s, %s, %s)
+                        """, disease_links)
+                        disease_count += len(disease_links)
+                        disease_links = []
+                    
+                    # Bulk insert symptom links
+                    if symptom_links:
+                        cursor.executemany("""
+                            INSERT IGNORE INTO symptom_patientdetails (SymptomID, PatientDetailsID, Onset)
+                            VALUES (%s, %s, %s)
+                        """, symptom_links)
+                        symptom_count += len(symptom_links)
+                        symptom_links = []
+                    
+                    self.connection.commit()
+                    print(f"Progress: {idx + 1}/{len(patients_with_doctors)} patients processed")
+            
+            # Final bulk inserts
+            if disease_links:
+                cursor.executemany("""
+                    INSERT IGNORE INTO disease_patientdetails (DiseaseID, PatientDetailsID, Onset)
+                    VALUES (%s, %s, %s)
+                """, disease_links)
+                disease_count += len(disease_links)
+            
+            if symptom_links:
+                cursor.executemany("""
+                    INSERT IGNORE INTO symptom_patientdetails (SymptomID, PatientDetailsID, Onset)
+                    VALUES (%s, %s, %s)
+                """, symptom_links)
+                symptom_count += len(symptom_links)
+            
+            self.connection.commit()
+            cursor.close()
+            
+        finally:
+            # Re-enable autocommit
+            self.connection.autocommit = True
         
         print(f"✓ Linked {disease_count} diseases to patients")
         print(f"✓ Linked {symptom_count} symptoms to patients")
@@ -1121,7 +1132,7 @@ if __name__ == "__main__":
     if inserter.connect():
         # Populate all tables with comprehensive data
         inserter.populate_all_data(
-            num_doctors=10,
+            num_doctors=50,
             patients_per_doctor=20
         )
         
