@@ -1,60 +1,44 @@
 Use medmanagedb;
-DROP PROCEDURE IF EXISTS AddPrescriptionReminder;
+DROP PROCEDURE IF EXISTS AddPatientReminder;
 
 DELIMITER //
 
-CREATE PROCEDURE AddPrescriptionReminder(
+CREATE PROCEDURE AddPatientReminder(
     IN p_PatientUserID INT,
-    IN p_PrescriptionDetailID INT,
     IN p_StartOn DATETIME,
     IN p_EndOn DATETIME,
-    IN p_IntervalMinutes INT
+    IN p_IntervalMinutes INT,
+    IN p_PrescriptionDetailID INT,
+    IN p_AppointmentID INT
 )
 BEGIN
     DECLARE v_PatientDetailsID INT;
-    DECLARE v_PrescriptionID INT;
-    DECLARE v_OwnerUserID INT;
 
-    -- Get the patient's PatientDetailsID
+    -- Get the PatientDetailsID for the given UserID
     SELECT PatientDetailsID INTO v_PatientDetailsID
     FROM PatientDetails
     WHERE UserID = p_PatientUserID;
 
-    -- Get the PrescriptionID linked to this PrescriptionDetail
-    SELECT PrescriptionID INTO v_PrescriptionID
-    FROM PrescriptionDetail
-    WHERE PrescriptionDetailID = p_PrescriptionDetailID;
+    -- Insert the reminder
+    INSERT INTO Reminder (StartOn, EndOn, IntervalMinutes, PrescriptionDetailID, AppointmentID)
+    VALUES (p_StartOn, p_EndOn, p_IntervalMinutes, p_PrescriptionDetailID, p_AppointmentID);
 
-    -- Get the owner of this prescription
-    SELECT PatientUserID INTO v_OwnerUserID
-    FROM Prescription
-    WHERE PrescriptionID = v_PrescriptionID;
+    -- Log the action
+    INSERT INTO log (ActionType, TableName, Query, PerformedBy)
+    VALUES (
+        'INSERT',
+        'Reminder',
+        CONCAT('CALL AddPatientReminder(', p_PatientUserID, ', ''', p_StartOn, ''', ''', 
+               p_EndOn, ''', ', p_IntervalMinutes, ', ', p_PrescriptionDetailID, ', ', 
+               p_AppointmentID, ');'),
+        (SELECT Username FROM Users WHERE UserID = p_PatientUserID)
+    );
 
-    -- Check if the prescription belongs to the patient
-    IF v_OwnerUserID = p_PatientUserID THEN
-        -- Insert the reminder
-        INSERT INTO Reminder (StartOn, EndOn, IntervalMinutes, PrescriptionDetailID)
-        VALUES (p_StartOn, p_EndOn, p_IntervalMinutes, p_PrescriptionDetailID);
-
-        -- Log the action
-        INSERT INTO log (ActionType, TableName, Query, PerformedBy)
-        VALUES (
-            'INSERT',
-            'Reminder',
-            CONCAT('CALL AddPrescriptionReminder(', p_PatientUserID, ', ', p_PrescriptionDetailID, ', ''', 
-                   p_StartOn, ''', ''', p_EndOn, ''', ', p_IntervalMinutes, ');'),
-            (SELECT Username FROM Users WHERE UserID = p_PatientUserID)
-        );
-
-        -- Return the inserted ReminderID
-        SELECT LAST_INSERT_ID() AS ReminderID;
-    ELSE
-        SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'Prescription does not belong to this patient';
-    END IF;
-
+    -- Return the inserted ReminderID
+    SELECT LAST_INSERT_ID() AS ReminderID;
 END //
 
 DELIMITER ;
 
---CALL AddPrescriptionReminder(5, 10, '2025-12-01 08:00:00', '2025-12-10 08:00:00', 720);
+-- CALL AddPatientReminder(1, '2024-07-01 09:00:00', '2024-07-10 09:00:00', 240, 5, NULL); -- Example call to the procedure for prescription reminder
+-- CALL AddPatientReminder(1, '2024-07-15 10:00 :00', '2024-07-15 11:00:00', 0, NULL, 3); -- Example call to the procedure for appointment reminder
