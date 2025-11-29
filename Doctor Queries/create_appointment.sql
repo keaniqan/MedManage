@@ -30,4 +30,4 @@ END//
 DELIMITER ;
 
 -- To create appointment (example below)
--- CALL CreateAppointment('1', '1', '2025-01-01 69:67:96', 'Blood Check', '1', '1');
+-- CALL CreateAppointment('1', '1', '2025-01-01 11:11:11', 'Blood Check', '1', '1');
