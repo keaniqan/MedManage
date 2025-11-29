@@ -1,9 +1,6 @@
 USE medmanagedb;
 
 DROP PROCEDURE IF EXISTS DeleteAppointment;
-
-DELIMITER //
-
 CREATE PROCEDURE DeleteAppointment
 (
 IN p_AppointmentID INT
@@ -19,7 +16,7 @@ BEGIN
     'Appointment',
     CONCAT('CALL DeleteAppointment(', p_AppointmentID, ');')
     );
-END //
+END
 
 DELIMITER ;
 

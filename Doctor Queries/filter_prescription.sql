@@ -26,9 +26,7 @@ BEGIN
         AND (p_Remark IS NULL OR Remark LIKE CONCAT('%', p_Remark, '%'))
         AND (p_PrescribedOn IS NULL OR PrescribedOn = p_PrescribedOn)
     ORDER BY PrescriptionID;
-END //
-
-DELIMITER ;
+END
 
 -- Usage examples:
 -- Filter by PrescriptionID

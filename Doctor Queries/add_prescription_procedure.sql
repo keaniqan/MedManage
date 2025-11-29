@@ -1,7 +1,5 @@
 -- add_prescription.sql
 Use medmanagedb;
-
-DELIMITER //
 DROP PROCEDURE IF EXISTS AddPrescription//
 CREATE PROCEDURE AddPrescription(
     IN p_PatientID INT,
@@ -70,14 +68,8 @@ BEGIN
         
         -- Get the newly created prescription ID
         SET v_PrescriptionID = LAST_INSERT_ID();
-        
-        -- Return success message
-        SELECT v_PrescriptionID AS PrescriptionID,
-               'Prescription added successfully' AS Message;
     END IF;
 END //
-
-DELIMITER ;
 
 -- Add a new prescription
 CALL AddPrescription(1, 2, 5, NULL, '500mg twice daily', '30 tablets', '2 refills', '2024-11-28 14:30:00');

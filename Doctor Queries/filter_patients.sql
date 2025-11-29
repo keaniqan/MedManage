@@ -1,9 +1,6 @@
 USE medmanagedb;
 
 DROP PROCEDURE IF EXISTS FilterPatients;
-
-DELIMITER //
-
 CREATE PROCEDURE FilterPatients(
     IN p_PatientDetailsID INT,
     IN p_UserID INT,
@@ -30,6 +27,4 @@ BEGIN
         AND (p_EmergencyContact IS NULL OR pd.EmergencyContact LIKE CONCAT('%', p_EmergencyContact, '%'))
         AND (p_DOB IS NULL OR pd.DOB = p_DOB)
     ORDER BY pd.PatientDetailsID;
-END //
-
-DELIMITER ;
+END 

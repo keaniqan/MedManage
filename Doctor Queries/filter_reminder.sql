@@ -1,8 +1,5 @@
 USE medmanagedb;
-
 DROP PROCEDURE IF EXISTS FilterReminder;
-
-DELIMITER //
 
 CREATE PROCEDURE FilterReminder(
     IN p_ReminderID INT,
@@ -22,9 +19,7 @@ BEGIN
         AND (p_PrescriptionDetailID IS NULL OR PrescriptionDetailID = PrescriptionDetailID)
         AND (p_AppointmentID IS NULL OR AppointmentID = AppointmentID)
     ORDER BY ReminderID;
-END //
-
-DELIMITER ;
+END
 
 -- Usage examples:
 -- Filter by ReminderID

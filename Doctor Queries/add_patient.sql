@@ -1,9 +1,5 @@
-SET FOREIGN_KEY_CHECKS=0;
 USE medmanagedb;
-
-DELIMITER //
-
-DROP PROCEDURE IF EXISTS AddPatient//
+DROP PROCEDURE IF EXISTS AddPatient
 
 CREATE PROCEDURE AddPatient(
     IN p_Username VARCHAR(100),
@@ -154,9 +150,4 @@ BEGIN
                p_InstituteID, ',''', p_ABOBloodType, ''',''', p_RhBloodType, ''',''',
                p_EmergencyContact, ''',''', p_DOB, ''');')
     );
-    
-    -- Return the newly created patient info
-    SELECT v_UserID AS UserID, 'Patient added successfully' AS Message;
-END//
-
-DELIMITER ;
+END
