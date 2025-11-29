@@ -17,7 +17,7 @@ BEGIN
     VALUES (
     'DROP', 
     'Medicine',
-    CONCAT('CALL DeleteMedication(', p_MedicineID, ');')
+    CONCAT('CALL DeleteMedication(''', p_MedicineID, ''');')
     );
 END //
 

@@ -21,7 +21,7 @@ BEGIN
     VALUES (
         'UPDATE',
         'Medicine',
-        CONCAT('CALL EditMedication(', p_MedicineId, ', ''', p_FieldName, ''', ''', p_NewValue, ''');')
+        CONCAT('CALL EditMedication(''', p_MedicineId, ''', ''', p_FieldName, ''', ''', p_NewValue, ''');')
     );
 END //
 
