@@ -28,10 +28,10 @@ DELIMITER ;
 
 -- Usage examples:
 -- Filter by ReminderID
-CALL FilterReminder(1, NULL, NULL, NULL, NULL, NULL);
+-- CALL FilterReminder(1, NULL, NULL, NULL, NULL, NULL);
 
 -- Filter by PrescriptionDetailID
-CALL FilterReminder(NULL, NULL, NULL, NULL, 1, NULL);
+-- CALL FilterReminder(NULL, NULL, NULL, NULL, 1, NULL);
 
 -- Filter by AppointmentID
-CALL FilterReminder(NULL, NULL, NULL, NULL, NULL, 1);
+-- CALL FilterReminder(NULL, NULL, NULL, NULL, NULL, 1);

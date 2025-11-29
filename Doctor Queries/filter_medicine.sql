@@ -24,7 +24,7 @@ DELIMITER ;
 
 -- Usage examples:
 -- Filter by MedicineID
-CALL FilterMedicine(1, NULL, NULL, NULL);
+-- CALL FilterMedicine(1, NULL, NULL, NULL);
 
 -- Filter by Name
 CALL FilterMedicine(NULL, 'Paracetamol', NULL, NULL);

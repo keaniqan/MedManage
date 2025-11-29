@@ -30,7 +30,7 @@ DELIMITER ;
 
 -- Usage examples:
 -- Filter by AppointmentID
-CALL FilterAppointment(1, NULL, NULL, NULL, NULL, NULL, NULL);
+-- CALL FilterAppointment(1, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- Filter by PatientUserID
-CALL FilterAppointment(NULL, 1, NULL, NULL, NULL, NULL, NULL);
+-- CALL FilterAppointment(NULL, 1, NULL, NULL, NULL, NULL, NULL);

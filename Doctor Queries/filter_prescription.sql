@@ -32,7 +32,7 @@ DELIMITER ;
 
 -- Usage examples:
 -- Filter by PrescriptionID
-CALL FilterPrescription(1, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+-- CALL FilterPrescription(1, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- Filter by PatientUserID
-CALL FilterPrescription(NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL);
+-- CALL FilterPrescription(NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL);
