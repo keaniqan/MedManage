@@ -125,6 +125,7 @@ CREATE TABLE `Institute` (
   `StateProvinceCode` varchar(3)  NOT NULL,
   `Country` varchar(2)  NOT NULL,
   `PostalCode` varchar(15)  NOT NULL,
+  `DeletedOn` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`InstituteID`),
   UNIQUE `UnqName` (`Name`)
 );
@@ -322,6 +323,7 @@ CREATE TABLE `Users` (
   `Identification` varchar(20) NOT NULL,
   `Gender` enum('M','F') NOT NULL,
   `InstituteID` smallint UNSIGNED DEFAULT NULL,
+  `DeletedOn` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`UserID`),
   UNIQUE `UnqUsername` (`Username`),
   KEY `InstituteID` (`InstituteID`)
