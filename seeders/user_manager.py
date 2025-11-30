@@ -871,7 +871,7 @@ class UserInserter:
     # Create Prescription Detail
     # -------------------------
     def create_prescription_detail(self, prescription_id, dose, interval_minutes, remark, days_duration=7):
-        """Create prescription detail"""
+        """Create prescription detail (trigger will automatically create reminder)"""
         if not self.connection or not self.connection.is_connected():
             return False
         try:
@@ -919,10 +919,13 @@ class UserInserter:
             return False
 
     # -------------------------
-    # Create Reminder for Prescription
+    # Create Reminder for Prescription (DEPRECATED - Now handled by trigger)
     # -------------------------
     def create_reminder_for_prescription(self, prescription_detail_id, interval_minutes):
-        """Create reminder for prescription detail"""
+        """Create reminder for prescription detail
+        NOTE: This is now deprecated as reminders are created automatically by trigger
+        Kept for backward compatibility only
+        """
         if not self.connection or not self.connection.is_connected():
             return False
         try:
@@ -1048,7 +1051,8 @@ class UserInserter:
                         detail_id = self.create_prescription_detail(prescription_id, dose, interval, "As prescribed", days_duration=random.randint(7, 30))
                         
                         if detail_id:
-                            self.create_reminder_for_prescription(detail_id, interval)
+                            # Reminder is now created automatically by trigger
+                            # self.create_reminder_for_prescription(detail_id, interval)
                             prescription_count += 1
                 
                 # Create appointments
