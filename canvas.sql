@@ -4,8 +4,6 @@
 -- =============================================
 DROP TRIGGER IF EXISTS after_prescriptiondetail_insert;
 
-DELIMITER $$
-
 CREATE TRIGGER after_prescriptiondetail_insert
 AFTER INSERT ON prescriptiondetail
 FOR EACH ROW
@@ -17,9 +15,7 @@ BEGIN
         NEW.IntervalMinutes,      -- Interval from prescription detail
         NEW.PrescriptionDetailID  -- The newly created prescription detail ID
     );
-END$$
-
-DELIMITER ;
+END
 
 -- Test the trigger (optional)
 -- INSERT INTO prescriptiondetail (PrescriptionID, IsTakeOnEffect, StartOn, EndOn, Dose, IntervalMinutes, Remark)
