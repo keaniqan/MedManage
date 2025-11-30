@@ -330,7 +330,7 @@ CREATE TABLE `Users` (
 -- 
 -- Constraints for table relations
 -- 
-ALTER table `Appointment`
+ALTER TABLE `Appointment`
   ADD CONSTRAINT `Appointment_ibfk_1` FOREIGN KEY (`PatientUserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `Appointment_ibfk_2` FOREIGN KEY (`DoctorUserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -349,8 +349,7 @@ ALTER TABLE `Doctor_Patient`
   ADD CONSTRAINT `Doctor_Patient_ibfk_2` FOREIGN KEY (`PatientDetailsID`) REFERENCES `PatientDetails` (`PatientDetailsID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE `PatientDetails`
-  ADD CONSTRAINT `PatientDetails_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `PatientDetails_ibfk_2` FOREIGN KEY (`UserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+  ADD CONSTRAINT `PatientDetails_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE `Prescription`
   ADD CONSTRAINT `Prescription_ibfk_2` FOREIGN KEY (`DoctorUserID`) REFERENCES `Users` (`UserID`) ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -375,24 +374,30 @@ ALTER TABLE `Symptom_PatientDetails`
 
 ALTER TABLE `Users`
   ADD CONSTRAINT `Users_ibfk_1` FOREIGN KEY (`InstituteID`) REFERENCES `Institute` (`InstituteID`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
 COMMIT;
 
 -- -Triggers and procedures below
 
-DROP TRIGGER IF EXISTS before_insert_user_action_log;
+DELIMITER //
+
+DROP TRIGGER IF EXISTS before_insert_user_action_log//
+
 CREATE TRIGGER before_insert_user_action_log
-BEFORE INSERT ON log
+BEFORE INSERT ON Log
 FOR EACH ROW
 BEGIN
     IF NEW.PerformedBy IS NULL OR NEW.PerformedBy = '' THEN
         SET NEW.PerformedBy = CURRENT_USER();
     END IF;
-END;
+END//
 
 -- ------------------------------
 -- Add Doctor Stored Procedure --
 -- ------------------------------
-DROP PROCEDURE IF EXISTS AddDoctorData;
+
+DROP PROCEDURE IF EXISTS AddDoctorData//
+
 CREATE PROCEDURE AddDoctorData(
     IN p_Username VARCHAR(100),
     IN p_Email VARCHAR(100),
@@ -422,7 +427,7 @@ BEGIN
     
     START TRANSACTION;
     
-    INSERT INTO users (
+    INSERT INTO Users (
         Username, Email, UserType,
         FirstName, LastName, Phone, PasswordHash,
         Identification, Gender, InstituteID
@@ -435,7 +440,7 @@ BEGIN
 
     SET p_UserID = LAST_INSERT_ID();
             
-    INSERT INTO doctordetails (
+    INSERT INTO DoctorDetails (
         UserID, Specialist, MedicalLicenceNumber, YearsOfExperience,
         MedicalSchool, Certificates, LanguagesSpoken
     ) VALUES (
@@ -443,10 +448,10 @@ BEGIN
         p_MedicalSchool, p_Certificates, p_LanguagesSpoken
     );
 
-    INSERT INTO log (ActionType, TableName, Query)
+    INSERT INTO Log (ActionType, TableName, Query)
     VALUES (
         'INSERT',
-        'users',
+        'Users',
         CONCAT('CALL AddDoctor(''', p_Username, ''',''', p_Email, ''',''', 
                p_FirstName, ''',''', p_LastName, ''',''', p_Phone, ''',''',
                p_Password, ''',''', p_Identification, ''',''', p_Gender, ''',',
@@ -455,10 +460,11 @@ BEGIN
     
     COMMIT;
     SET p_Success = TRUE;
-END;
+END//
 
 -- Procedure 2: Create MySQL account (only if data insert succeeded)
-DROP PROCEDURE IF EXISTS CreateDoctorMySQLAccount;
+DROP PROCEDURE IF EXISTS CreateDoctorMySQLAccount//
+
 CREATE PROCEDURE CreateDoctorMySQLAccount(
     IN p_Username VARCHAR(100),
     IN p_Password VARCHAR(255)
@@ -474,7 +480,7 @@ BEGIN
     DEALLOCATE PREPARE stmt1;
 
     SET @grant_sql = CONCAT(
-        'GRANT SELECT, INSERT, UPDATE ON `medmanagedb`.`users` TO `',
+        'GRANT SELECT, INSERT, UPDATE ON `medmanagedb`.`Users` TO `',
         REPLACE(p_Username,'`','``'),
         '`@`localhost`;'
     );
@@ -483,7 +489,7 @@ BEGIN
     DEALLOCATE PREPARE stmt2;
 
     SET @grant_sql2 = CONCAT(
-        'GRANT SELECT, INSERT, UPDATE ON `medmanagedb`.`doctordetails` TO `',
+        'GRANT SELECT, INSERT, UPDATE ON `medmanagedb`.`DoctorDetails` TO `',
         REPLACE(p_Username,'`','``'),
         '`@`localhost`;'
     );
@@ -492,10 +498,11 @@ BEGIN
     DEALLOCATE PREPARE stmt3;
 
     FLUSH PRIVILEGES;
-END;
+END//
 
 -- Main Procedure: Orchestrates both operations
-DROP PROCEDURE IF EXISTS AddDoctor;
+DROP PROCEDURE IF EXISTS AddDoctor//
+
 CREATE PROCEDURE AddDoctor(
     IN p_Username VARCHAR(100),
     IN p_Email VARCHAR(100),
@@ -517,7 +524,6 @@ BEGIN
     DECLARE v_UserID INT;
     DECLARE v_Success BOOLEAN DEFAULT FALSE;
     
-    -- Step 1: Insert data with transaction protection
     CALL AddDoctorData(
         p_Username, p_Email, p_FirstName, p_LastName,
         p_Phone, p_Password, p_Identification, p_Gender,
@@ -526,7 +532,6 @@ BEGIN
         p_LanguagesSpoken, v_UserID, v_Success
     );
     
-    -- Step 2: Only create MySQL account if data insert succeeded
     IF v_Success THEN
         CALL CreateDoctorMySQLAccount(p_Username, p_Password);
         SELECT v_UserID AS UserID, 'Doctor added successfully with MySQL account' AS Message;
@@ -534,13 +539,13 @@ BEGIN
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = 'Failed to add doctor data. MySQL account not created.';
     END IF;
-END;
+END//
 
 -- ---------------------------------
 -- Delete Doctor Stored Procedure --
 -- ---------------------------------
 
-DROP PROCEDURE IF EXISTS DeleteDoctor;
+DROP PROCEDURE IF EXISTS DeleteDoctor//
 
 CREATE PROCEDURE DeleteDoctor(
     IN p_UserID INT
@@ -548,19 +553,16 @@ CREATE PROCEDURE DeleteDoctor(
 BEGIN
     DECLARE v_Username VARCHAR(100);
 
-    -- Get the doctor's username (only if the user is a doctor)
     SELECT Username INTO v_Username 
-    FROM users
+    FROM Users
     WHERE UserID = p_UserID AND UserType = 'doctor';
 
-    -- Delete user only if it exists and is a doctor
-    SET @sql = 'DELETE FROM users WHERE UserID = ? AND UserType = ''doctor''';
+    SET @sql = 'DELETE FROM Users WHERE UserID = ? AND UserType = ''doctor''';
     PREPARE stmt FROM @sql;
     SET @userId = p_UserID;
     EXECUTE stmt USING @userId;
     DEALLOCATE PREPARE stmt;
 
-    -- Drop the MySQL login if the username exists
     IF v_Username IS NOT NULL THEN
         SET @drop_sql = CONCAT('DROP USER IF EXISTS `', REPLACE(v_Username,'`','``'), '`@''localhost'';');
         PREPARE stmt2 FROM @drop_sql;
@@ -568,20 +570,19 @@ BEGIN
         DEALLOCATE PREPARE stmt2;
     END IF;
 
-    -- Log the action
-    INSERT INTO log (ActionType, TableName, Query)
+    INSERT INTO Log (ActionType, TableName, Query)
     VALUES (
         'DROP',
-        'users',
+        'Users',
         CONCAT('CALL DeleteDoctor(', p_UserID, ');')
     );
-END;
+END//
 
 -- -------------------------------
 -- Edit Doctor Stored Procedure --
 -- -------------------------------
 
-DROP PROCEDURE IF EXISTS UpdateDoctor;
+DROP PROCEDURE IF EXISTS UpdateDoctor//
 
 CREATE PROCEDURE UpdateDoctor(
     IN p_UserID INT,
@@ -589,25 +590,27 @@ CREATE PROCEDURE UpdateDoctor(
     IN p_NewValue VARCHAR(255)
 )
 BEGIN
-    SET @sql = CONCAT('UPDATE users SET ', p_FieldName, ' = ? WHERE UserID = ? AND UserType = ''doctor''');
+    SET @sql = CONCAT('UPDATE Users SET ', p_FieldName, ' = ? WHERE UserID = ? AND UserType = ''doctor''');
     PREPARE stmt FROM @sql;
     SET @newValue = p_NewValue;
     SET @userId = p_UserID;
     EXECUTE stmt USING @newValue, @userId;
     DEALLOCATE PREPARE stmt;
 
-    INSERT INTO log (ActionType, TableName, Query)
+    INSERT INTO Log (ActionType, TableName, Query)
     VALUES (
         'UPDATE',
-        'users',
+        'Users',
         CONCAT('CALL UpdateDoctor(', p_UserID, ', ''', p_FieldName, ''', ''', p_NewValue, ''');')
     );
-  END;
+END//
 
 -- ---------------------------------
 -- Filter Doctor Stored Procedure --
 -- ---------------------------------
-DROP PROCEDURE IF EXISTS FilterDoctors;
+
+DROP PROCEDURE IF EXISTS FilterDoctors//
+
 CREATE PROCEDURE FilterDoctors(
     IN p_DoctorDetailsID INT,
     IN p_UserID INT,
@@ -630,13 +633,13 @@ BEGIN
         AND (p_Certificates IS NULL OR Certificates LIKE CONCAT('%', p_Certificates, '%'))
         AND (p_LanguagesSpoken IS NULL OR JSON_SEARCH(LanguagesSpoken, 'one', CONCAT('%', p_LanguagesSpoken, '%')) IS NOT NULL)
     ORDER BY DoctorDetailsID;
-END;
+END//
 
 -- ----------------------
--- add medicine procedure
+-- Add Medicine Procedure
 -- ----------------------
 
-DROP PROCEDURE IF EXISTS AddMedicine;
+DROP PROCEDURE IF EXISTS AddMedicine//
 
 CREATE PROCEDURE AddMedicine(
     IN p_Name VARCHAR(100),
@@ -647,27 +650,21 @@ BEGIN
     INSERT INTO Medicine (Name, Brand, Description)
     VALUES (p_Name, p_Brand, p_Description);
     
-    -- Log the action
-    INSERT INTO log (ActionType, TableName, Query)
+    INSERT INTO Log (ActionType, TableName, Query)
     VALUES (
         'INSERT',
         'Medicine',
         CONCAT('CALL AddMedicine(''', p_Name, ''', ''', p_Brand, ''', ''', p_Description, ''');')
     );
     
-    -- Return the newly created MedicineId
     SELECT LAST_INSERT_ID() AS MedicineId;
-END;
-
-
--- To add medicines (example below)
--- CALL AddMedicine('Ibuprofen', 'Advil', 'Anti-inflammatory and pain reliever');''
+END//
 
 -- ----------------------
--- add patient 
+-- Add Patient Procedure
 -- ----------------------
 
-DROP PROCEDURE IF EXISTS AddPatient;
+DROP PROCEDURE IF EXISTS AddPatient//
 
 CREATE PROCEDURE AddPatient(
     IN p_Username VARCHAR(100),
@@ -687,7 +684,7 @@ CREATE PROCEDURE AddPatient(
 BEGIN
     DECLARE v_UserID INT;
     
-    INSERT INTO users (
+    INSERT INTO Users (
         Username, Email, UserType,
         FirstName, LastName, Phone, PasswordHash,
         Identification, Gender, InstituteID
@@ -700,13 +697,12 @@ BEGIN
 
     SET v_UserID = LAST_INSERT_ID();
 
-    INSERT INTO patientdetails (
+    INSERT INTO PatientDetails (
         UserID, ABOBloodType, RhBloodType, EmergencyContact, DOB
     ) VALUES (
         v_UserID, p_ABOBloodType, p_RhBloodType, p_EmergencyContact, p_DOB
     );
 
-    -- Create MySQL account
     SET @create_sql = CONCAT(
         'CREATE USER IF NOT EXISTS `',
         REPLACE(p_Username,'`','``'),
@@ -716,9 +712,8 @@ BEGIN
     EXECUTE stmt1;
     DEALLOCATE PREPARE stmt1;
 
-    -- Grant SELECT and UPDATE on users table (so they can edit their own user info)
     SET @grant_sql = CONCAT(
-        'GRANT SELECT, UPDATE ON `medmanagedb`.`users` TO `',
+        'GRANT SELECT, UPDATE ON `medmanagedb`.`Users` TO `',
         REPLACE(p_Username,'`','``'),
         '`@`localhost`;'
     );
@@ -726,9 +721,8 @@ BEGIN
     EXECUTE stmt2;
     DEALLOCATE PREPARE stmt2;
 
-    -- View their patient details (READ ONLY - cannot change blood type, DOB, etc.)
     SET @grant_sql2 = CONCAT(
-        'GRANT SELECT ON `medmanagedb`.`patientdetails` TO `',
+        'GRANT SELECT ON `medmanagedb`.`PatientDetails` TO `',
         REPLACE(p_Username,'`','``'),
         '`@`localhost`;'
     );
@@ -736,9 +730,8 @@ BEGIN
     EXECUTE stmt3;
     DEALLOCATE PREPARE stmt3;
 
-    -- View their prescriptions (READ ONLY)
     SET @grant_sql3 = CONCAT(
-        'GRANT SELECT ON `medmanagedb`.`prescription` TO `',
+        'GRANT SELECT ON `medmanagedb`.`Prescription` TO `',
         REPLACE(p_Username,'`','``'),
         '`@`localhost`;'
     );
@@ -746,9 +739,8 @@ BEGIN
     EXECUTE stmt4;
     DEALLOCATE PREPARE stmt4;
 
-    -- View prescription details (READ ONLY)
     SET @grant_sql4 = CONCAT(
-        'GRANT SELECT ON `medmanagedb`.`prescriptiondetail` TO `',
+        'GRANT SELECT ON `medmanagedb`.`PrescriptionDetail` TO `',
         REPLACE(p_Username,'`','``'),
         '`@`localhost`;'
     );
@@ -756,9 +748,8 @@ BEGIN
     EXECUTE stmt5;
     DEALLOCATE PREPARE stmt5;
 
-    -- View appointments (READ ONLY)
     SET @grant_sql5 = CONCAT(
-        'GRANT SELECT ON `medmanagedb`.`appointment` TO `',
+        'GRANT SELECT ON `medmanagedb`.`Appointment` TO `',
         REPLACE(p_Username,'`','``'),
         '`@`localhost`;'
     );
@@ -766,9 +757,8 @@ BEGIN
     EXECUTE stmt6;
     DEALLOCATE PREPARE stmt6;
 
-    -- View medicine information (READ ONLY)
     SET @grant_sql6 = CONCAT(
-        'GRANT SELECT ON `medmanagedb`.`medicine` TO `',
+        'GRANT SELECT ON `medmanagedb`.`Medicine` TO `',
         REPLACE(p_Username,'`','``'),
         '`@`localhost`;'
     );
@@ -776,9 +766,8 @@ BEGIN
     EXECUTE stmt7;
     DEALLOCATE PREPARE stmt7;
 
-    -- View compliance (their medication tracking) - READ ONLY
     SET @grant_sql7 = CONCAT(
-        'GRANT SELECT ON `medmanagedb`.`compliance` TO `',
+        'GRANT SELECT ON `medmanagedb`.`Compliance` TO `',
         REPLACE(p_Username,'`','``'),
         '`@`localhost`;'
     );
@@ -786,9 +775,8 @@ BEGIN
     EXECUTE stmt8;
     DEALLOCATE PREPARE stmt8;
 
-    -- View reminders (READ ONLY)
     SET @grant_sql8 = CONCAT(
-        'GRANT SELECT ON `medmanagedb`.`reminder` TO `',
+        'GRANT SELECT ON `medmanagedb`.`Reminder` TO `',
         REPLACE(p_Username,'`','``'),
         '`@`localhost`;'
     );
@@ -796,9 +784,8 @@ BEGIN
     EXECUTE stmt9;
     DEALLOCATE PREPARE stmt9;
 
-    -- View doctor details (to see their doctor's info) - READ ONLY
     SET @grant_sql9 = CONCAT(
-        'GRANT SELECT ON `medmanagedb`.`doctordetails` TO `',
+        'GRANT SELECT ON `medmanagedb`.`DoctorDetails` TO `',
         REPLACE(p_Username,'`','``'),
         '`@`localhost`;'
     );
@@ -808,10 +795,10 @@ BEGIN
 
     FLUSH PRIVILEGES;
 
-    INSERT INTO log (ActionType, TableName, Query)
+    INSERT INTO Log (ActionType, TableName, Query)
     VALUES (
         'INSERT',
-        'users',
+        'Users',
         CONCAT('CALL AddPatient(''', p_Username, ''',''', p_Email, ''',''', 
                p_FirstName, ''',''', p_LastName, ''',''', p_Phone, ''',''',
                p_Password, ''',''', p_Identification, ''',''', p_Gender, ''',',
@@ -819,6 +806,7 @@ BEGIN
                p_EmergencyContact, ''',''', p_DOB, ''');')
     );
     
-    -- Return the newly created patient info
     SELECT v_UserID AS UserID, 'Patient added successfully' AS Message;
-END;
+END//
+
+DELIMITER ;
