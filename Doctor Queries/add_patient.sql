@@ -1,7 +1,8 @@
 USE medmanagedb;
-DROP PROCEDURE IF EXISTS AddPatient
 
-CREATE PROCEDURE AddPatient(
+-- Procedure 1: Insert patient data with transaction control
+DROP PROCEDURE IF EXISTS AddPatientData;
+CREATE PROCEDURE AddPatientData(
     IN p_Username VARCHAR(100),
     IN p_Email VARCHAR(255),
     IN p_FirstName VARCHAR(100),
@@ -14,10 +15,19 @@ CREATE PROCEDURE AddPatient(
     IN p_ABOBloodType ENUM('A','B','AB','O'),
     IN p_RhBloodType ENUM('+','-'),
     IN p_EmergencyContact VARCHAR(20),
-    IN p_DOB DATE
+    IN p_DOB DATE,
+    OUT p_UserID INT,
+    OUT p_Success BOOLEAN
 )
 BEGIN
-    DECLARE v_UserID INT;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_Success = FALSE;
+        SET p_UserID = NULL;
+    END;
+    
+    START TRANSACTION;
     
     INSERT INTO users (
         Username, Email, UserType,
@@ -30,14 +40,36 @@ BEGIN
         p_Identification, p_Gender, p_InstituteID
     );
 
-    SET v_UserID = LAST_INSERT_ID();
+    SET p_UserID = LAST_INSERT_ID();
 
     INSERT INTO patientdetails (
         UserID, ABOBloodType, RhBloodType, EmergencyContact, DOB
     ) VALUES (
-        v_UserID, p_ABOBloodType, p_RhBloodType, p_EmergencyContact, p_DOB
+        p_UserID, p_ABOBloodType, p_RhBloodType, p_EmergencyContact, p_DOB
     );
 
+    INSERT INTO log (ActionType, TableName, Query)
+    VALUES (
+        'INSERT',
+        'users',
+        CONCAT('CALL AddPatient(''', p_Username, ''',''', p_Email, ''',''', 
+               p_FirstName, ''',''', p_LastName, ''',''', p_Phone, ''',''',
+               p_Password, ''',''', p_Identification, ''',''', p_Gender, ''',',
+               p_InstituteID, ',''', p_ABOBloodType, ''',''', p_RhBloodType, ''',''',
+               p_EmergencyContact, ''',''', p_DOB, ''');')
+    );
+    
+    COMMIT;
+    SET p_Success = TRUE;
+END;
+
+-- Procedure 2: Create MySQL account (only if data insert succeeded)
+DROP PROCEDURE IF EXISTS CreatePatientMySQLAccount;
+CREATE PROCEDURE CreatePatientMySQLAccount(
+    IN p_Username VARCHAR(100),
+    IN p_Password VARCHAR(255)
+)
+BEGIN
     -- Create MySQL account
     SET @create_sql = CONCAT(
         'CREATE USER IF NOT EXISTS `',
@@ -139,15 +171,43 @@ BEGIN
     DEALLOCATE PREPARE stmt10;
 
     FLUSH PRIVILEGES;
+END;
 
-    INSERT INTO log (ActionType, TableName, Query)
-    VALUES (
-        'INSERT',
-        'users',
-        CONCAT('CALL AddPatient(''', p_Username, ''',''', p_Email, ''',''', 
-               p_FirstName, ''',''', p_LastName, ''',''', p_Phone, ''',''',
-               p_Password, ''',''', p_Identification, ''',''', p_Gender, ''',',
-               p_InstituteID, ',''', p_ABOBloodType, ''',''', p_RhBloodType, ''',''',
-               p_EmergencyContact, ''',''', p_DOB, ''');')
+-- Main Procedure: Orchestrates both operations
+DROP PROCEDURE IF EXISTS AddPatient;
+CREATE PROCEDURE AddPatient(
+    IN p_Username VARCHAR(100),
+    IN p_Email VARCHAR(255),
+    IN p_FirstName VARCHAR(100),
+    IN p_LastName VARCHAR(100),
+    IN p_Phone VARCHAR(25),
+    IN p_Password VARCHAR(255),
+    IN p_Identification VARCHAR(20),
+    IN p_Gender CHAR(1),
+    IN p_InstituteID SMALLINT,
+    IN p_ABOBloodType ENUM('A','B','AB','O'),
+    IN p_RhBloodType ENUM('+','-'),
+    IN p_EmergencyContact VARCHAR(20),
+    IN p_DOB DATE
+)
+BEGIN
+    DECLARE v_UserID INT;
+    DECLARE v_Success BOOLEAN DEFAULT FALSE;
+    
+    -- Step 1: Insert data with transaction protection
+    CALL AddPatientData(
+        p_Username, p_Email, p_FirstName, p_LastName,
+        p_Phone, p_Password, p_Identification, p_Gender,
+        p_InstituteID, p_ABOBloodType, p_RhBloodType,
+        p_EmergencyContact, p_DOB, v_UserID, v_Success
     );
-END
+    
+    -- Step 2: Only create MySQL account if data insert succeeded
+    IF v_Success THEN
+        CALL CreatePatientMySQLAccount(p_Username, p_Password);
+        SELECT v_UserID AS UserID, 'Patient added successfully with MySQL account' AS Message;
+    ELSE
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Failed to add patient data. MySQL account not created.';
+    END IF;
+END;

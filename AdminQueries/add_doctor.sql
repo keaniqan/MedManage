@@ -149,7 +149,4 @@ END;
 -- Test the procedure
 -- CALL AddDoctor('doc7','dr.smith@example.com','John','Smith','0987654321','doc7','IC7654321','M',1,'Cardiology','ML123456',10,'Harvard Medical School','Board Certified','["English", "Malay"]');
 
-CREATE USER IF NOT EXISTS 'doc7'@'localhost' IDENTIFIED BY 'doc7';
-GRANT SELECT, INSERT, UPDATE ON medmanagedb.users TO 'doc7'@'localhost';
-GRANT SELECT, INSERT, UPDATE ON medmanagedb.doctordetails TO 'doc7'@'localhost';
 FLUSH PRIVILEGES;
