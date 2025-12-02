@@ -28,5 +28,5 @@ END //
 
 DELIMITER ;
 
--- CALL AddPatientReminder(1, '2024-07-01 09:00:00', '2024-07-10 09:00:00', 240, 5, NULL); -- Example call to the procedure for prescription reminder
--- CALL AddPatientReminder(1, '2024-07-15 10:00 :00', '2024-07-15 11:00:00', 0, NULL, 3); -- Example call to the procedure for appointment reminder
+-- CALL AddPrescriptionReminder(1, '2024-07-01 09:00:00', '2024-07-10 09:00:00', 240, 5, NULL); -- Example call to the procedure for appointment reminder
+-- CALL AddPrescriptionReminder(1, '2024-07-15 10:00 :00', '2024-07-15 11:00:00', 0, NULL, 3); -- Example call to the procedure for appointment reminder
