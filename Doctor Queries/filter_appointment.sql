@@ -1,9 +1,6 @@
 USE medmanagedb;
 
 DROP PROCEDURE IF EXISTS FilterAppointment;
-
-DELIMITER //
-
 CREATE PROCEDURE FilterAppointment(
     IN p_AppointmentID INT,
     IN p_PatientUserID INT,
@@ -24,9 +21,7 @@ BEGIN
         AND (p_IsDoctorAccept IS NULL OR IsDoctorAccept = p_IsDoctorAccept)
         AND (p_IsPatientAccept IS NULL OR IsPatientAccept = p_IsPatientAccept)
     ORDER BY AppointmentID;
-END //
-
-DELIMITER ;
+END
 
 -- Usage examples:
 -- Filter by AppointmentID

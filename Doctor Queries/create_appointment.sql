@@ -1,8 +1,6 @@
 USE medmanagedb;
-DELIMITER //
 
-DROP PROCEDURE IF EXISTS CreateAppointment//
-
+DROP PROCEDURE IF EXISTS CreateAppointment
 CREATE PROCEDURE CreateAppointment(
     IN p_PatientUserID INT,
     IN p_DoctorUserID INT,
@@ -25,9 +23,8 @@ BEGIN
     
     -- Return the newly created appointment
     SELECT LAST_INSERT_ID() AS AppointmentId;
-END//
+END
 
-DELIMITER ;
 
 -- To create appointment (example below)
 -- CALL CreateAppointment('1', '1', '2025-01-01 11:11:11', 'Blood Check', '1', '1');

@@ -1,16 +1,10 @@
 USE medmanagedb;
 
 DROP PROCEDURE IF EXISTS DeletePrescription;
-
-DELIMITER //
-
-CREATE PROCEDURE DeletePrescription
-(
-IN p_PrescriptionID INT
-)
-BEGIN
-    DELETE FROM Prescription
-    WHERE PrescriptionID = p_PrescriptionID;
+CREATE PROCEDURE DeletePrescription(
+    IN p_PrescriptionID INT
+)BEGIN
+    DELETE FROM Prescription WHERE PrescriptionID = p_PrescriptionID;
     
     -- log user action
     INSERT INTO log(ActionType, TableName, Query) 

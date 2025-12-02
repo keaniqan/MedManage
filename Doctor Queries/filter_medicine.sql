@@ -1,9 +1,6 @@
 USE medmanagedb;
 
 DROP PROCEDURE IF EXISTS FilterMedicine;
-
-DELIMITER //
-
 CREATE PROCEDURE FilterMedicine(
     IN p_MedicineId INT,
     IN p_Name VARCHAR(100),
@@ -18,9 +15,7 @@ BEGIN
         AND (p_Brand IS NULL OR Brand LIKE CONCAT('%', p_Brand, '%'))
         AND (p_Description IS NULL OR Description LIKE CONCAT('%', p_Description, '%'))
     ORDER BY MedicineId;
-END //
-
-DELIMITER ;
+END
 
 -- Usage examples:
 -- Filter by MedicineID
