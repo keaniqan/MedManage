@@ -862,22 +862,29 @@ class UserInserter:
             self.connection.commit()
             prescription_id = cursor.lastrowid
             cursor.close()
-            return prescription_id
+            return prescription_id, prescribed_on  # Return both ID and date
         except Error as e:
             print(f"✗ Error creating prescription: {e}")
-            return False
+            return False, None
 
     # -------------------------
     # Create Prescription Detail
     # -------------------------
-    def create_prescription_detail(self, prescription_id, dose, interval_minutes, remark, days_duration=7):
-        """Create prescription detail"""
+    def create_prescription_detail(self, prescription_id, dose, interval_minutes, remark, days_duration=7, prescribed_on=None):
+        """Create prescription detail (trigger will automatically create reminder)"""
         if not self.connection or not self.connection.is_connected():
             return False
         try:
             cursor = self.connection.cursor()
-            start_on = datetime.now()
+            
+            # Use prescribed_on if provided, otherwise use current date
+            if prescribed_on:
+                start_on = prescribed_on
+            else:
+                start_on = datetime.now()
+            
             end_on = start_on + timedelta(days=days_duration)
+            
             query = """
             INSERT INTO prescriptiondetail 
             (PrescriptionID, IsTakeOnEffect, StartOn, EndOn, Dose, IntervalMinutes, Remark)
@@ -919,10 +926,13 @@ class UserInserter:
             return False
 
     # -------------------------
-    # Create Reminder for Prescription
+    # Create Reminder for Prescription (DEPRECATED - Now handled by trigger)
     # -------------------------
     def create_reminder_for_prescription(self, prescription_detail_id, interval_minutes):
-        """Create reminder for prescription detail"""
+        """Create reminder for prescription detail
+        NOTE: This is now deprecated as reminders are created automatically by trigger
+        Kept for backward compatibility only
+        """
         if not self.connection or not self.connection.is_connected():
             return False
         try:
@@ -952,7 +962,7 @@ class UserInserter:
     # -------------------------
     # Populate All Data (OPTIMIZED)
     # -------------------------
-    def populate_all_data(self, num_doctors=50, patients_per_doctor=20):
+    def populate_all_data(self, num_doctors=10, patients_per_doctor=20):
         """Populate all tables with related data"""
         fake = Faker()
         
@@ -1040,15 +1050,27 @@ class UserInserter:
                     total_dose = f"{random.randint(7, 30)} tablets"
                     remark = random.choice(["Take after meals", "Take before bedtime", "Take with water", "Complete full course"])
                     
-                    prescription_id = self.create_prescription(patient_user_id, doctor_user_id, medicine_id, total_dose, remark)
+                    prescription_result = self.create_prescription(patient_user_id, doctor_user_id, medicine_id, total_dose, remark)
+                    
+                    # Handle both old (single value) and new (tuple) return formats
+                    if isinstance(prescription_result, tuple):
+                        prescription_id, prescribed_on = prescription_result
+                    else:
+                        prescription_id = prescription_result
+                        prescribed_on = None
                     
                     if prescription_id:
                         dose = f"{random.choice(['1', '2'])} tablet(s)"
                         interval = random.choice([480, 720, 1440])
-                        detail_id = self.create_prescription_detail(prescription_id, dose, interval, "As prescribed", days_duration=random.randint(7, 30))
+                        detail_id = self.create_prescription_detail(
+                            prescription_id, dose, interval, "As prescribed", 
+                            days_duration=random.randint(7, 30),
+                            prescribed_on=prescribed_on  # Pass the prescription date
+                        )
                         
                         if detail_id:
-                            self.create_reminder_for_prescription(detail_id, interval)
+                            # Reminder is now created automatically by trigger
+                            # self.create_reminder_for_prescription(detail_id, interval)
                             prescription_count += 1
                 
                 # Create appointments
@@ -1132,7 +1154,7 @@ if __name__ == "__main__":
     if inserter.connect():
         # Populate all tables with comprehensive data
         inserter.populate_all_data(
-            num_doctors=50,
+            num_doctors=10,
             patients_per_doctor=20
         )
         

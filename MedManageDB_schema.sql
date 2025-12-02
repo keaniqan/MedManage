@@ -391,6 +391,62 @@ BEGIN
     END IF;
 END;
 
+DROP TRIGGER IF EXISTS after_prescriptiondetail_insert;
+
+CREATE TRIGGER after_prescriptiondetail_insert
+AFTER INSERT ON prescriptiondetail
+FOR EACH ROW
+BEGIN
+    -- Call AddReminder procedure with the prescription detail information
+    CALL AddPrescriptionReminder(
+        NEW.StartOn,              -- Start date from prescription detail
+        NEW.EndOn,                -- End date from prescription detail
+        NEW.IntervalMinutes,      -- Interval from prescription detail
+        NEW.PrescriptionDetailID  -- The newly created prescription detail ID
+    );
+END;
+
+DROP TRIGGER IF EXISTS after_appointment_accepted;
+
+CREATE TRIGGER after_appointment_accepted
+AFTER UPDATE ON appointment
+FOR EACH ROW
+BEGIN
+    -- Check if both doctor and patient have accepted (changed from NULL or 0 to 1)
+    IF NEW.IsDoctorAccept = 1 AND NEW.IsPatientAccept = 1 THEN
+        -- Check if a reminder doesn't already exist for this appointment
+        IF NOT EXISTS (
+            SELECT 1 FROM reminder 
+            WHERE AppointmentID = NEW.AppointmentID
+        ) THEN
+            -- Insert reminder for the appointment
+            -- StartOn is set to 1 day before appointment
+            -- EndOn is set to the appointment time
+            -- IntervalMinutes can be set to remind every few hours before appointment
+            INSERT INTO reminder (
+                StartOn,
+                EndOn,
+                IntervalMinutes,
+                AppointmentID
+            ) VALUES (
+                DATE_SUB(NEW.AppointmentOn, INTERVAL 1 DAY),  -- Start reminding 1 day before
+                NEW.AppointmentOn,                             -- Stop at appointment time
+                360,                                            -- Remind every 6 hours
+                NEW.AppointmentID
+            );
+            
+            -- Log the action
+            INSERT INTO log (ActionType, TableName, Query, PerformedBy)
+            VALUES (
+                'INSERT',
+                'reminder',
+                CONCAT('Auto reminder created for AppointmentID = ', NEW.AppointmentID),
+                'SYSTEM'
+            );
+        END IF;
+    END IF;
+END;
+
 -- ------------------------------
 -- Add Doctor Stored Procedure --
 -- ------------------------------
@@ -824,3 +880,35 @@ BEGIN
     -- Return the newly created patient info
     SELECT v_UserID AS UserID, 'Patient added successfully' AS Message;
 END;
+
+-- ----------------------
+-- add reminder procedure
+-- ----------------------
+
+DROP PROCEDURE IF EXISTS AddPrescriptionReminder; 
+CREATE PROCEDURE AddPrescriptionReminder(
+    IN p_StartOn DATETIME,
+    IN p_EndOn DATETIME,
+    IN p_IntervalMinutes INT,
+    IN p_PrescriptionDetailID INT
+)
+BEGIN
+    -- Insert the reminder
+    INSERT INTO Reminder (StartOn, EndOn, IntervalMinutes, PrescriptionDetailID)
+    VALUES (p_StartOn, p_EndOn, p_IntervalMinutes, p_PrescriptionDetailID);
+
+    -- Simple log (because triggers do not have user context)
+    INSERT INTO log (ActionType, TableName, Query, PerformedBy)
+    VALUES (
+        'INSERT',
+        'Reminder',
+        CONCAT(
+            'Auto reminder created for PrescriptionDetailID = ',
+            p_PrescriptionDetailID
+        ),
+        'SYSTEM'
+    );
+END;
+
+-- CALL AddPrescriptionReminder('2024-07-01 09:00:00', '2024-07-10 09:00:00', 240, 5); -- Example call to the procedure for prescription reminder
+-- CALL AddPrescriptionReminder('2024-07-15 10:00 :00', '2024-07-15 11:00:00', 0, 3); -- Example call to the procedure for appointment reminder
