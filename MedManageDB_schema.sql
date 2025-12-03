@@ -605,34 +605,42 @@ CREATE PROCEDURE DeleteDoctor(
 )
 BEGIN
     DECLARE v_Username VARCHAR(100);
+    
+    START TRANSACTION;
+    
+    -- Throw an error if doctor user by that ID does not exist
+    IF NOT EXISTS (
+        SELECT 1 FROM users WHERE UserID = p_UserID AND UserType = 'doctor'
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Doctor user not found';
+    END IF;
 
-    -- Get the doctor's username (only if the user is a doctor)
+    -- Get the doctor's username
     SELECT Username INTO v_Username 
     FROM users
     WHERE UserID = p_UserID AND UserType = 'doctor';
 
-    -- Delete user only if it exists and is a doctor
-    SET @sql = 'DELETE FROM users WHERE UserID = ? AND UserType = ''doctor''';
-    PREPARE stmt FROM @sql;
-    SET @userId = p_UserID;
-    EXECUTE stmt USING @userId;
-    DEALLOCATE PREPARE stmt;
+    -- Soft delete the doctor from the User table
+    UPDATE users SET DeletedOn = NOW() WHERE UserID = p_UserID AND UserType = 'doctor';
 
-    -- Drop the MySQL login if the username exists
+    -- Drop the MySQL user if it exists
     IF v_Username IS NOT NULL THEN
-        SET @drop_sql = CONCAT('DROP USER IF EXISTS `', REPLACE(v_Username,'`','``'), '`@''localhost'';');
-        PREPARE stmt2 FROM @drop_sql;
-        EXECUTE stmt2;
-        DEALLOCATE PREPARE stmt2;
+        SET @dropUserQuery = CONCAT('DROP USER IF EXISTS \'', v_Username, '\'@\'%\';');
+        PREPARE stmt FROM @dropUserQuery;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
     END IF;
 
-    -- Log the action
+    -- Log the deletion action
     INSERT INTO log (ActionType, TableName, Query)
     VALUES (
         'DROP',
         'users',
         CONCAT('CALL DeleteDoctor(', p_UserID, ');')
     );
+    
+    COMMIT;
 END;
 
 -- -------------------------------
@@ -643,24 +651,47 @@ DROP PROCEDURE IF EXISTS UpdateDoctor;
 
 CREATE PROCEDURE UpdateDoctor(
     IN p_UserID INT,
+    IN p_TableName VARCHAR(50),
     IN p_FieldName VARCHAR(50),
     IN p_NewValue VARCHAR(255)
 )
 BEGIN
-    SET @sql = CONCAT('UPDATE users SET ', p_FieldName, ' = ? WHERE UserID = ? AND UserType = ''doctor''');
+    START TRANSACTION;
+    
+    -- Check if doctor exists
+    IF NOT EXISTS (
+        SELECT 1 FROM users WHERE UserID = p_UserID AND UserType = 'doctor'
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Doctor user not found';
+    END IF;
+    
+    -- Update the specified table
+    IF p_TableName = 'users' THEN
+        SET @sql = CONCAT('UPDATE users SET ', p_FieldName, ' = ? WHERE UserID = ? AND UserType = ''doctor''');
+    ELSEIF p_TableName = 'doctordetails' THEN
+        SET @sql = CONCAT('UPDATE doctordetails SET ', p_FieldName, ' = ? WHERE DoctorID = ?');
+    ELSE
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Invalid table name. Use ''users'' or ''doctordetails''';
+    END IF;
+    
     PREPARE stmt FROM @sql;
     SET @newValue = p_NewValue;
     SET @userId = p_UserID;
     EXECUTE stmt USING @newValue, @userId;
     DEALLOCATE PREPARE stmt;
 
+    -- Log the action
     INSERT INTO log (ActionType, TableName, Query)
     VALUES (
         'UPDATE',
-        'users',
-        CONCAT('CALL UpdateDoctor(', p_UserID, ', ''', p_FieldName, ''', ''', p_NewValue, ''');')
+        p_TableName,
+        CONCAT('CALL UpdateDoctor(', p_UserID, ', ''', p_TableName, ''', ''', p_FieldName, ''', ''', p_NewValue, ''');')
     );
-  END;
+    
+    COMMIT;
+END;
 
 -- ---------------------------------
 -- Filter Doctor Stored Procedure --

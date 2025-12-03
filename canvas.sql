@@ -20,3 +20,13 @@ END
 -- Test the trigger (optional)
 -- INSERT INTO prescriptiondetail (PrescriptionID, IsTakeOnEffect, StartOn, EndOn, Dose, IntervalMinutes, Remark)
 -- VALUES (1, 0, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), '1 tablet', 480, 'Test reminder trigger');
+
+CALL FilterAppointment(
+    NULL,         -- AppointmentID (not filtering by ID)
+    7,            -- PatientUserID (Alice)
+    NULL,         -- DoctorUserID (any doctor)
+    NULL,         -- AppointmentOn (any date)
+    'follow-up',  -- Details contains 'follow-up'
+    TRUE,         -- IsDoctorAccept = TRUE
+    TRUE          -- IsPatientAccept = TRUE
+);
