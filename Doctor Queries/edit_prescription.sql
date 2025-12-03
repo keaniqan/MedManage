@@ -1,33 +1,33 @@
 USE medmanagedb;
 
-DROP PROCEDURE IF EXISTS EditMedication;
+DROP PROCEDURE IF EXISTS EditPrescription;
 
 DELIMITER //
 
-CREATE PROCEDURE EditMedication(
-    IN p_MedicineId INT,
+CREATE PROCEDURE EditPrescription(
+    IN p_PrescriptionId INT,
 	IN p_FieldName VARCHAR(50),
     IN p_NewValue VARCHAR(255)
 )
 BEGIN
-    SET @sql = CONCAT('UPDATE Medicine SET ', p_FieldName, ' = ? WHERE MedicineId = ?');
+    SET @sql = CONCAT('UPDATE Prescription SET ', p_FieldName, ' = ? WHERE PrescriptionId = ?');
     PREPARE stmt FROM @sql;
     SET @NewValue = p_NewValue;
-    SET @MedicineId = p_MedicineID;
-    EXECUTE stmt USING @NewValue, @MedicineId;
+    SET @PrescriptionId = p_PrescriptionID;
+    EXECUTE stmt USING @NewValue, @PrescriptionId;
     DEALLOCATE PREPARE stmt;
 
     INSERT INTO log (ActionType, TableName, Query)
     VALUES (
         'UPDATE',
-        'Medicine',
-        CONCAT('CALL EditMedication(', p_MedicineId, ', ''', p_FieldName, ''', ''', p_NewValue, ''');')
+        'Prescription',
+        CONCAT('CALL EditPrescription(', p_PrescriptionId, ', ''', p_FieldName, ''', ''', p_NewValue, ''');')
     );
 END //
 
 -- Usage examples below
--- Edit Name
--- CALL EditMedication(1, 'Name', 'Paracetamol');
+-- Edit TotalDose
+-- CALL EditPrescription(1, 'TotalDose', '2');
 
--- Edit Brand
--- CALL EditMedication(1, 'Brand', 'Panadol');
+-- Edit Remark
+-- CALL EditPrescription(1, 'Remark', 'Consume before sleep');
