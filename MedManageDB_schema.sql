@@ -22,6 +22,7 @@ CREATE TABLE `Appointment` (
   `Details` varchar(500)  NOT NULL,
   `IsDoctorAccept` tinyint(1) DEFAULT NULL,
   `IsPatientAccept` tinyint(1) DEFAULT NULL,
+  `AudioFilePath` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`AppointmentID`),
   KEY `DoctorUserID` (`DoctorUserID`),
   KEY `PatientUserID` (`PatientUserID`)
